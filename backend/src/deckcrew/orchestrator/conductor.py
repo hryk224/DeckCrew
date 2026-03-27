@@ -21,7 +21,8 @@ from deckcrew.api.events import (
     SSEEvent,
 )
 from deckcrew.memory.base import MemoryStore
-from deckcrew.memory.models import InterventionRecord
+from deckcrew.memory.models import InterventionRecord, PreferenceProfile
+from deckcrew.memory.preference import apply_preference_bonus
 from deckcrew.music.base import MusicBackend
 from deckcrew.orchestrator.models import Decision, RejectionDetail, TurnResult
 from deckcrew.orchestrator.repetition import detect_repetition
@@ -283,8 +284,9 @@ class Conductor:
         kind="minor" clamps parameter changes and preserves section.
         kind="major" allows full changes (default, M1/M2 behavior).
         """
-        # 0. Capture user request before it gets consumed
+        # 0. Capture user request and load preference profile
         user_request_text = session.last_user_request
+        profile = await self._memory.get_profile()
 
         # 1. Build inputs
         agent_input = AgentInput(
@@ -340,7 +342,7 @@ class Conductor:
         )
 
         # 7. Select the adopted proposal
-        decision = self._select(session, proposals, critique, reactions)
+        decision = self._select(session, proposals, critique, reactions, profile)
 
         # 8. Apply minor clamping if needed
         applied_params = decision.applied_params
@@ -480,16 +482,18 @@ class Conductor:
         proposals: list[Proposal],
         critique: Critique,
         reactions: list[Reaction],
+        profile: PreferenceProfile,
     ) -> Decision:
-        """Pick the best proposal, influenced by feedback."""
+        """Pick the best proposal, influenced by feedback and preferences."""
 
         if session.last_user_request:
+            # User request takes priority; preferences not applied
             return self._select_with_user_request(
                 proposals, critique, reactions
             )
 
         return self._select_by_score(
-            session, proposals, critique, reactions
+            session, proposals, critique, reactions, profile
         )
 
     def _select_with_user_request(
@@ -534,8 +538,9 @@ class Conductor:
         proposals: list[Proposal],
         critique: Critique,
         reactions: list[Reaction],
+        profile: PreferenceProfile,
     ) -> Decision:
-        """No user request: pick by change score + feedback bonus - repetition penalty."""
+        """No user request: pick by change score + feedback + repetition + preference."""
         scored: list[tuple[Proposal, float, list[str]]] = []
         for p in proposals:
             base = _compute_change_score(
@@ -555,6 +560,12 @@ class Conductor:
             for pen in penalties:
                 adjusted += pen.penalty
                 notes.append(pen.reason)
+
+            # Preference bonuses from memory
+            pref_bonuses = apply_preference_bonus(profile, p.suggested_params)
+            for pb in pref_bonuses:
+                adjusted += pb.bonus
+                notes.append(pb.reason)
 
             scored.append((p, adjusted, notes))
 
