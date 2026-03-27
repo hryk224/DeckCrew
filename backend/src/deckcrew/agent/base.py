@@ -1,6 +1,13 @@
 from typing import Protocol
 
-from deckcrew.agent.models import AgentInput, CriticInput, Critique, Proposal
+from deckcrew.agent.models import (
+    AgentInput,
+    AudienceInput,
+    CriticInput,
+    Critique,
+    Proposal,
+    Reaction,
+)
 
 
 class DJAgent(Protocol):
@@ -26,3 +33,18 @@ class CriticAgent(Protocol):
     def name(self) -> str: ...
 
     async def evaluate(self, critic_input: CriticInput) -> Critique: ...
+
+
+class AudienceAgent(Protocol):
+    """Interface for audience agents.
+
+    Returns a listener's reaction to the current session flow.
+    Separate from DJ proposals (what to do next) and Critic
+    evaluations (what's wrong). Audience reflects reception,
+    mood, and energy demand.
+    """
+
+    @property
+    def name(self) -> str: ...
+
+    async def react(self, audience_input: AudienceInput) -> Reaction: ...

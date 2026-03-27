@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from deckcrew.state.models import MusicParams
 
@@ -41,3 +41,23 @@ class Critique(BaseModel):
     issue: str
     severity: Severity
     suggestion: str
+
+
+# --- Audience agent schemas ---
+
+
+class AudienceInput(BaseModel):
+    """Input passed to the Audience agent for reaction."""
+
+    current_params: MusicParams
+    last_change: str | None = None
+    turn_count: int = 0
+
+
+class Reaction(BaseModel):
+    """Audience agent's reaction to the current session flow."""
+
+    audience_name: str
+    reaction: str
+    energy_delta: float = Field(default=0.0, ge=-1.0, le=1.0)
+    reason: str
