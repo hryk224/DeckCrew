@@ -44,6 +44,20 @@ cd backend
 uv run uvicorn deckcrew.main:app --reload --port 8000
 ```
 
+dev server の停止（WSL2 では `Ctrl+C` で子プロセスが残る場合がある）:
+
+```bash
+# フロントエンド停止（next-server と子プロセスを停止）
+pkill -f "next-server" 2>/dev/null; pkill -f "next dev" 2>/dev/null
+
+# バックエンド停止
+pkill -f "uvicorn" 2>/dev/null
+
+# ポート解放の確認
+lsof -i :3000 -t 2>/dev/null && echo "3000 使用中" || echo "3000 空き"
+lsof -i :8000 -t 2>/dev/null && echo "8000 使用中" || echo "8000 空き"
+```
+
 バックエンドの疎通確認:
 
 ```bash

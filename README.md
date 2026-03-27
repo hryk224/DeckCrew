@@ -44,6 +44,20 @@ cd backend
 uv run uvicorn deckcrew.main:app --reload --port 8000
 ```
 
+Stop dev servers (WSL2: `Ctrl+C` may leave child processes):
+
+```bash
+# Stop frontend (kills next-server and all child processes)
+pkill -f "next-server" 2>/dev/null; pkill -f "next dev" 2>/dev/null
+
+# Stop backend
+pkill -f "uvicorn" 2>/dev/null
+
+# Verify ports are free
+lsof -i :3000 -t 2>/dev/null && echo "3000 still in use" || echo "3000 free"
+lsof -i :8000 -t 2>/dev/null && echo "8000 still in use" || echo "8000 free"
+```
+
 Verify the backend is running:
 
 ```bash
