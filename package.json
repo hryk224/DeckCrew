@@ -1,0 +1,11 @@
+{
+  "name": "deckcrew-root",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "format:md": "prettier --write \"**/*.md\" \"!**/node_modules/**\""
+  },
+  "devDependencies": {
+    "prettier": "3.5.3"
+  }
+}

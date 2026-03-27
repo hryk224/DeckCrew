@@ -55,22 +55,22 @@ curl http://localhost:8000/health
 
 `.env.example` で定義。開発開始前に `.env` へコピーすること。
 
-| 変数名 | デフォルト | 説明 |
-| --- | --- | --- |
-| `MUSIC_BACKEND` | `mock` | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
-| `LYRIA_API_KEY` | (空) | `MUSIC_BACKEND=lyria` の場合のみ必須 |
-| `LLM_MODEL` | (空) | エージェント呼び出しに使用する LLM モデル識別子 |
-| `BACKEND_PORT` | `8000` | バックエンドサーバーのポート番号 |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | フロントエンドが参照するバックエンド API の URL |
+| 変数名                | デフォルト              | 説明                                                       |
+| --------------------- | ----------------------- | ---------------------------------------------------------- |
+| `MUSIC_BACKEND`       | `mock`                  | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
+| `LYRIA_API_KEY`       | (空)                    | `MUSIC_BACKEND=lyria` の場合のみ必須                       |
+| `LLM_MODEL`           | (空)                    | エージェント呼び出しに使用する LLM モデル識別子            |
+| `BACKEND_PORT`        | `8000`                  | バックエンドサーバーのポート番号                           |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | フロントエンドが参照するバックエンド API の URL            |
 
 ## 設定ファイル
 
-| ファイル | 役割 |
-| --- | --- |
-| `.npmrc` | npm セキュリティ設定（save-exact, ignore-scripts） |
-| `.env.example` | 環境変数テンプレート |
-| `frontend/package.json` | フロントエンドの依存とスクリプト |
-| `backend/pyproject.toml` | バックエンドの依存とツール設定 |
+| ファイル                 | 役割                                               |
+| ------------------------ | -------------------------------------------------- |
+| `.npmrc`                 | npm セキュリティ設定（save-exact, ignore-scripts） |
+| `.env.example`           | 環境変数テンプレート                               |
+| `frontend/package.json`  | フロントエンドの依存とスクリプト                   |
+| `backend/pyproject.toml` | バックエンドの依存とツール設定                     |
 
 ## ディレクトリ構成
 
@@ -98,13 +98,13 @@ DeckCrew/
 
 API エンドポイント、エージェント制御、音楽生成制御、セッション状態を担当する Python バックエンド。
 
-| パッケージ | 責務 |
-| --- | --- |
-| `api/` | HTTP エンドポイント（REST: コマンド、SSE: 状態配信） |
-| `agent/` | DJ エージェントの役割定義・プロンプト・提案生成 |
-| `orchestrator/` | Conductor: 提案収集・統合・採用決定 |
-| `music/` | Lyria Realtime API ラッパー（モック切替可能な抽象化） |
-| `state/` | インメモリのセッション状態: mood, bpm, energy, texture, focus |
+| パッケージ      | 責務                                                          |
+| --------------- | ------------------------------------------------------------- |
+| `api/`          | HTTP エンドポイント（REST: コマンド、SSE: 状態配信）          |
+| `agent/`        | DJ エージェントの役割定義・プロンプト・提案生成               |
+| `orchestrator/` | Conductor: 提案収集・統合・採用決定                           |
+| `music/`        | Lyria Realtime API ラッパー（モック切替可能な抽象化）         |
+| `state/`        | インメモリのセッション状態: mood, bpm, energy, texture, focus |
 
 ### shared/
 

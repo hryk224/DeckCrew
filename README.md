@@ -55,22 +55,22 @@ curl http://localhost:8000/health
 
 Defined in `.env.example`. Copy to `.env` before starting.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `MUSIC_BACKEND` | `mock` | `mock` for local dev, `lyria` for Lyria Realtime API |
-| `LYRIA_API_KEY` | (empty) | Required only when `MUSIC_BACKEND=lyria` |
-| `LLM_MODEL` | (empty) | LLM model identifier for agent calls |
-| `BACKEND_PORT` | `8000` | Backend server port |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL used by frontend |
+| Variable              | Default                 | Description                                          |
+| --------------------- | ----------------------- | ---------------------------------------------------- |
+| `MUSIC_BACKEND`       | `mock`                  | `mock` for local dev, `lyria` for Lyria Realtime API |
+| `LYRIA_API_KEY`       | (empty)                 | Required only when `MUSIC_BACKEND=lyria`             |
+| `LLM_MODEL`           | (empty)                 | LLM model identifier for agent calls                 |
+| `BACKEND_PORT`        | `8000`                  | Backend server port                                  |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL used by frontend                |
 
 ## Configuration Files
 
-| File | Purpose |
-| --- | --- |
-| `.npmrc` | npm security settings (save-exact, ignore-scripts) |
-| `.env.example` | Environment variable template |
-| `frontend/package.json` | Frontend dependencies and scripts |
-| `backend/pyproject.toml` | Backend dependencies and tool configuration |
+| File                     | Purpose                                            |
+| ------------------------ | -------------------------------------------------- |
+| `.npmrc`                 | npm security settings (save-exact, ignore-scripts) |
+| `.env.example`           | Environment variable template                      |
+| `frontend/package.json`  | Frontend dependencies and scripts                  |
+| `backend/pyproject.toml` | Backend dependencies and tool configuration        |
 
 ## Directory Structure
 
@@ -98,13 +98,13 @@ Displays session state, meeting logs, adopted decisions, and accepts user input.
 
 Python backend responsible for API endpoints, agent orchestration, music generation control, and session state.
 
-| Package | Responsibility |
-| --- | --- |
-| `api/` | HTTP endpoints (REST for commands, SSE for streaming state) |
-| `agent/` | DJ agent role definitions, prompts, and proposal generation |
+| Package         | Responsibility                                              |
+| --------------- | ----------------------------------------------------------- |
+| `api/`          | HTTP endpoints (REST for commands, SSE for streaming state) |
+| `agent/`        | DJ agent role definitions, prompts, and proposal generation |
 | `orchestrator/` | Conductor logic: collect proposals, resolve, emit decisions |
-| `music/` | Lyria Realtime API wrapper with mockable abstraction |
-| `state/` | In-memory session state: mood, bpm, energy, texture, focus |
+| `music/`        | Lyria Realtime API wrapper with mockable abstraction        |
+| `state/`        | In-memory session state: mood, bpm, energy, texture, focus  |
 
 ### shared/
 
