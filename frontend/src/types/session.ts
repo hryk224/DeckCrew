@@ -6,10 +6,37 @@ export interface MusicParams {
   focus: string;
 }
 
+// --- Section state (M3) ---
+
+export type Section = "intro" | "build" | "peak" | "release";
+export type TransitionIntent =
+  | "hold"
+  | "lift"
+  | "intensify"
+  | "cool_down"
+  | "reset";
+export type ChangeKind = "minor" | "major";
+
+export interface ChangeRecord {
+  turn: number;
+  kind: ChangeKind;
+  summary: string;
+}
+
+export interface SectionState {
+  current_section: Section;
+  transition_intent: TransitionIntent;
+  last_major_turn: number;
+  recent_changes: ChangeRecord[];
+}
+
+// --- Session state ---
+
 export interface SessionState {
   session_id: string;
   status: "idle" | "running" | "stopped";
   current_params: MusicParams;
+  section?: SectionState;
   last_change: string | null;
   last_user_request: string | null;
   turn_count: number;
