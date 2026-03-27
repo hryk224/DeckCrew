@@ -1,20 +1,116 @@
 "use client";
 
 import { useState } from "react";
+import { startSession, submitRequest, runTurn } from "@/lib/api";
 import { useSessionStream } from "@/lib/useSessionStream";
 
+type LoadingState = null | "starting" | "sending" | "turning";
+
 export default function Home() {
-  const { session, proposals, decision, connected } = useSessionStream();
+  const { session, proposals, decision, connected, reset } =
+    useSessionStream();
   const [requestText, setRequestText] = useState("");
+  const [loading, setLoading] = useState<LoadingState>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const isRunning = session !== null && session.status === "running";
+  const isBusy = loading !== null;
+
+  async function handleStartSession() {
+    setLoading("starting");
+    setError(null);
+    try {
+      reset();
+      await startSession();
+    } catch (e) {
+      setError(`Failed to start session: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleRunTurn() {
+    setLoading("turning");
+    setError(null);
+    try {
+      await runTurn();
+    } catch (e) {
+      setError(`Failed to run turn: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleSendRequest() {
+    const text = requestText.trim();
+    if (!text) return;
+
+    setLoading("sending");
+    setError(null);
+    try {
+      await submitRequest(text);
+      setRequestText("");
+    } catch (e) {
+      setError(`Failed to send request: ${e instanceof Error ? e.message : String(e)}`);
+      setLoading(null);
+      return;
+    }
+
+    setLoading("turning");
+    try {
+      await runTurn();
+    } catch (e) {
+      setError(`Request sent, but turn failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  const loadingLabel =
+    loading === "starting"
+      ? "Starting..."
+      : loading === "sending"
+        ? "Sending..."
+        : loading === "turning"
+          ? "Running turn..."
+          : null;
 
   return (
     <div className="app-container">
       <header className="app-header">
         <h1 className="app-title">DeckCrew</h1>
-        <span className={`connection-status ${connected ? "connected" : ""}`}>
-          {connected ? "Connected" : "Disconnected"}
-        </span>
+        <div className="header-controls">
+          <span
+            className={`connection-status ${connected ? "connected" : ""}`}
+          >
+            {connected ? "Connected" : "Disconnected"}
+          </span>
+          {!isRunning ? (
+            <button
+              className="header-button"
+              type="button"
+              disabled={!connected || isBusy}
+              onClick={handleStartSession}
+            >
+              {loading === "starting" ? "Starting..." : "Start Session"}
+            </button>
+          ) : (
+            <button
+              className="header-button"
+              type="button"
+              disabled={isBusy}
+              onClick={handleRunTurn}
+            >
+              {loading === "turning" && !requestText
+                ? "Running..."
+                : "Run Turn"}
+            </button>
+          )}
+        </div>
+        {error && <p className="error-message">{error}</p>}
+        {loadingLabel && !error && (
+          <p className="loading-message">{loadingLabel}</p>
+        )}
       </header>
 
       {/* Now Playing */}
@@ -96,9 +192,7 @@ export default function Home() {
         <div className="decision-content">
           {decision ? (
             <>
-              <p className="decision-adopted">
-                Adopted: {decision.adopted}
-              </p>
+              <p className="decision-adopted">Adopted: {decision.adopted}</p>
               <p className="decision-reason">{decision.reason}</p>
             </>
           ) : (
@@ -120,16 +214,19 @@ export default function Home() {
             className="request-input"
             placeholder="Send a request to the DJs..."
             rows={2}
-            disabled={!isRunning}
+            disabled={!isRunning || isBusy}
             value={requestText}
             onChange={(e) => setRequestText(e.target.value)}
           />
           <button
             className="request-button"
             type="button"
-            disabled={!isRunning || requestText.trim() === ""}
+            disabled={!isRunning || requestText.trim() === "" || isBusy}
+            onClick={handleSendRequest}
           >
-            Send
+            {loading === "sending" || loading === "turning"
+              ? loadingLabel
+              : "Send"}
           </button>
         </div>
       </section>

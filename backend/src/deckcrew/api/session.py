@@ -16,7 +16,13 @@ class UserRequest(BaseModel):
 
 @router.post("", response_model=SessionState)
 async def create_session() -> SessionState:
-    """Create a new session and start music playback."""
+    """Create a new session and start music playback.
+
+    If a session already exists, stops the current music backend
+    before creating a fresh session (reset-then-start).
+    """
+    if session_store.get_active() is not None:
+        await music_backend.stop()
     session = session_store.create()
     await music_backend.start()
     return session

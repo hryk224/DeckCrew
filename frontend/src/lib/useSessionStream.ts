@@ -20,6 +20,7 @@ export interface SessionStreamState {
   proposals: Proposal[];
   decision: Decision | null;
   connected: boolean;
+  reset: () => void;
 }
 
 export function useSessionStream(): SessionStreamState {
@@ -73,5 +74,11 @@ export function useSessionStream(): SessionStreamState {
     };
   }, [connect]);
 
-  return { session, proposals, decision, connected };
+  const reset = useCallback(() => {
+    setSession(null);
+    setProposals([]);
+    setDecision(null);
+  }, []);
+
+  return { session, proposals, decision, connected, reset };
 }

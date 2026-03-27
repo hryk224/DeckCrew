@@ -1,10 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from deckcrew.api.session import router as session_router
 from deckcrew.api.stream import router as stream_router
 from deckcrew.api.turn import router as turn_router
 
 app = FastAPI(title="DeckCrew API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(session_router)
 app.include_router(stream_router)
 app.include_router(turn_router)
