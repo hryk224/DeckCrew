@@ -30,6 +30,19 @@ export interface SectionState {
   recent_changes: ChangeRecord[];
 }
 
+// --- Venue context (M5) ---
+
+export type RoomSize = "intimate" | "club" | "festival";
+export type TimeOfNight = "early" | "peak_hours" | "late";
+export type EventVibe = "underground" | "mainstream" | "experimental";
+
+export interface VenueContext {
+  room_size: RoomSize;
+  crowd_density: number;
+  time_of_night: TimeOfNight;
+  event_vibe: EventVibe;
+}
+
 // --- Session state ---
 
 export interface SessionState {
@@ -37,6 +50,7 @@ export interface SessionState {
   status: "idle" | "running" | "stopped";
   current_params: MusicParams;
   section?: SectionState;
+  venue?: VenueContext | null;
   last_change: string | null;
   last_turn_kind?: ChangeKind | null;
   last_user_request: string | null;

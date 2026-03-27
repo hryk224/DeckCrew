@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+from deckcrew.venue.models import VenueContext
 
 
 class MusicParams(BaseModel):
@@ -53,6 +57,7 @@ class SessionState(BaseModel):
     status: str = "idle"  # idle | running | stopped
     current_params: MusicParams = Field(default_factory=MusicParams)
     section: SectionState = Field(default_factory=SectionState)
+    venue: VenueContext | None = None
     last_change: str | None = None
     last_turn_kind: ChangeKind | None = None
     last_user_request: str | None = None

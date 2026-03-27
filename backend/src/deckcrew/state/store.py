@@ -1,6 +1,7 @@
 import uuid
 
 from deckcrew.state.models import SessionState
+from deckcrew.venue.presets import DEFAULT_VENUE
 
 
 class SessionStore:
@@ -17,7 +18,9 @@ class SessionStore:
     def create(self) -> SessionState:
         """Create a new session, replacing any existing one."""
         session_id = uuid.uuid4().hex[:12]
-        session = SessionState(session_id=session_id, status="running")
+        session = SessionState(
+            session_id=session_id, status="running", venue=DEFAULT_VENUE
+        )
         self._sessions = {session_id: session}
         self._active_id = session_id
         return session
