@@ -2,6 +2,76 @@
 
 複数の自律 AI DJ が議論・交渉しながら、リアルタイムに音楽を生成・変化させるアプリケーション。
 
+## 前提ツール
+
+- [Node.js](https://nodejs.org/) v22 以上
+- [Python](https://www.python.org/) 3.12 以上
+- [uv](https://docs.astral.sh/uv/)（Python パッケージマネージャ）
+
+## セットアップ
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/hryk224/DeckCrew.git
+cd DeckCrew
+
+# 環境変数をコピー
+cp .env.example .env
+# 必要に応じて .env を編集（下記「環境変数」を参照）
+
+# フロントエンドの依存をインストール
+cd frontend
+npm install
+cd ..
+
+# バックエンドの依存をインストール
+cd backend
+uv sync --extra dev
+cd ..
+```
+
+## 開発
+
+各サービスを別のターミナルで起動する:
+
+```bash
+# ターミナル 1: フロントエンド (http://localhost:3000)
+cd frontend
+npm run dev
+
+# ターミナル 2: バックエンド (http://localhost:8000)
+cd backend
+uv run uvicorn deckcrew.main:app --reload --port 8000
+```
+
+バックエンドの疎通確認:
+
+```bash
+curl http://localhost:8000/health
+# => {"status":"ok"}
+```
+
+## 環境変数
+
+`.env.example` で定義。開発開始前に `.env` へコピーすること。
+
+| 変数名 | デフォルト | 説明 |
+| --- | --- | --- |
+| `MUSIC_BACKEND` | `mock` | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
+| `LYRIA_API_KEY` | (空) | `MUSIC_BACKEND=lyria` の場合のみ必須 |
+| `LLM_MODEL` | (空) | エージェント呼び出しに使用する LLM モデル識別子 |
+| `BACKEND_PORT` | `8000` | バックエンドサーバーのポート番号 |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | フロントエンドが参照するバックエンド API の URL |
+
+## 設定ファイル
+
+| ファイル | 役割 |
+| --- | --- |
+| `.npmrc` | npm セキュリティ設定（save-exact, ignore-scripts） |
+| `.env.example` | 環境変数テンプレート |
+| `frontend/package.json` | フロントエンドの依存とスクリプト |
+| `backend/pyproject.toml` | バックエンドの依存とツール設定 |
+
 ## ディレクトリ構成
 
 ```
@@ -24,21 +94,17 @@ DeckCrew/
 ユーザー向けの Next.js アプリケーション。
 セッション状態、会議ログ、採用結果の表示、およびユーザー入力の受付を担当する。
 
-> 未初期化。後続タスクでセットアップ予定。
-
 ### backend/
 
 API エンドポイント、エージェント制御、音楽生成制御、セッション状態を担当する Python バックエンド。
 
-| パッケージ      | 責務                                                          |
-| --------------- | ------------------------------------------------------------- |
-| `api/`          | HTTP エンドポイント（REST: コマンド、SSE: 状態配信）          |
-| `agent/`        | DJ エージェントの役割定義・プロンプト・提案生成               |
-| `orchestrator/` | Conductor: 提案収集・統合・採用決定                           |
-| `music/`        | Lyria Realtime API ラッパー（モック切替可能な抽象化）         |
-| `state/`        | インメモリのセッション状態: mood, bpm, energy, texture, focus |
-
-> パッケージの骨格のみ作成済み（`__init__.py` のみ）。実装は後続タスクで行う。
+| パッケージ | 責務 |
+| --- | --- |
+| `api/` | HTTP エンドポイント（REST: コマンド、SSE: 状態配信） |
+| `agent/` | DJ エージェントの役割定義・プロンプト・提案生成 |
+| `orchestrator/` | Conductor: 提案収集・統合・採用決定 |
+| `music/` | Lyria Realtime API ラッパー（モック切替可能な抽象化） |
+| `state/` | インメモリのセッション状態: mood, bpm, energy, texture, focus |
 
 ### shared/
 
