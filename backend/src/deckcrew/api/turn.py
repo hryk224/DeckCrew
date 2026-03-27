@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from deckcrew.agent.registry import create_agents, create_audiences, create_critic
 from deckcrew.api.event_bus import event_bus
+from deckcrew.memory.registry import memory_store
 from deckcrew.music.registry import music_backend
 from deckcrew.orchestrator.conductor import Conductor
 from deckcrew.orchestrator.models import TurnResult
@@ -40,5 +41,6 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
         store=session_store,
         bus=event_bus,
         music=music_backend,
+        memory=memory_store,
     )
     return await conductor.run_turn(session, kind=kind)

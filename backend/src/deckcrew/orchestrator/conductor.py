@@ -20,9 +20,13 @@ from deckcrew.api.events import (
     FeedbackItem,
     SSEEvent,
 )
+from deckcrew.memory.base import MemoryStore
+from deckcrew.memory.models import InterventionRecord
 from deckcrew.music.base import MusicBackend
 from deckcrew.orchestrator.models import Decision, RejectionDetail, TurnResult
 from deckcrew.orchestrator.repetition import detect_repetition
+from datetime import UTC, datetime
+
 from deckcrew.state.models import (
     MAX_RECENT_CHANGES,
     ChangeKind,
@@ -261,6 +265,7 @@ class Conductor:
         store: SessionStore,
         bus: EventBus,
         music: MusicBackend,
+        memory: MemoryStore,
     ) -> None:
         self._agents = agents
         self._critic = critic
@@ -268,6 +273,7 @@ class Conductor:
         self._store = store
         self._bus = bus
         self._music = music
+        self._memory = memory
 
     async def run_turn(
         self, session: SessionState, kind: ChangeKind = "major"
@@ -277,6 +283,9 @@ class Conductor:
         kind="minor" clamps parameter changes and preserves section.
         kind="major" allows full changes (default, M1/M2 behavior).
         """
+        # 0. Capture user request before it gets consumed
+        user_request_text = session.last_user_request
+
         # 1. Build inputs
         agent_input = AgentInput(
             current_params=session.current_params,
@@ -395,6 +404,18 @@ class Conductor:
         await self._bus.publish(
             SSEEvent(event=EVENT_STATE, data=updated.model_dump())
         )
+
+        # 15. Record intervention if user request was present
+        if user_request_text:
+            await self._memory.add_intervention(
+                InterventionRecord(
+                    session_id=session.session_id,
+                    turn=session.turn_count + 1,
+                    text=user_request_text,
+                    adopted_agent=decision.adopted_proposal.agent_name,
+                    timestamp=datetime.now(UTC).isoformat(),
+                )
+            )
 
         return TurnResult(
             kind=kind,

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from deckcrew.api.memory import router as memory_router
 from deckcrew.api.session import router as session_router
 from deckcrew.api.stream import router as stream_router
 from deckcrew.api.turn import router as turn_router
@@ -17,6 +18,7 @@ app.add_middleware(
 app.include_router(session_router)
 app.include_router(stream_router)
 app.include_router(turn_router)
+app.include_router(memory_router)
 
 
 @app.get("/health")
