@@ -355,11 +355,12 @@ class Conductor:
         if suppressions:
             change_summary += f" [minor: {', '.join(suppressions)}]"
 
-        # 10. SSE: decision
+        # 10. SSE: decision (includes kind for UI)
         await self._bus.publish(
             SSEEvent(
                 event=EVENT_DECISION,
                 data={
+                    "kind": kind,
                     "adopted": decision.adopted_proposal.agent_name,
                     "reason": decision.reason,
                     "applied_params": applied_params.model_dump(),
@@ -380,6 +381,7 @@ class Conductor:
                 "current_params": applied_params,
                 "section": new_section,
                 "last_change": change_summary,
+                "last_turn_kind": kind,
                 "turn_count": session.turn_count + 1,
                 "last_user_request": None,
             }

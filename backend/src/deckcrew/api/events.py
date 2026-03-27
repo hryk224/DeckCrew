@@ -83,10 +83,11 @@ class RejectedProposal(BaseModel):
 class DecisionEvent(BaseModel):
     """Payload schema for session.decision events.
 
-    `rejections` is optional for backward compatibility with M1.
+    `rejections` and `kind` are optional for backward compatibility with M1.
     """
 
     adopted: str
     reason: str
     applied_params: MusicParams
     rejections: list[RejectedProposal] | None = None
+    kind: str | None = None  # "minor" | "major" | None (M1 compat)

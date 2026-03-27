@@ -38,6 +38,7 @@ export interface SessionState {
   current_params: MusicParams;
   section?: SectionState;
   last_change: string | null;
+  last_turn_kind?: ChangeKind | null;
   last_user_request: string | null;
   turn_count: number;
 }
@@ -93,6 +94,7 @@ export interface Rejection {
 }
 
 export interface Decision {
+  kind?: ChangeKind;
   adopted: string;
   reason: string;
   applied_params: MusicParams;

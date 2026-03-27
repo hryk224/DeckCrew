@@ -54,5 +54,6 @@ class SessionState(BaseModel):
     current_params: MusicParams = Field(default_factory=MusicParams)
     section: SectionState = Field(default_factory=SectionState)
     last_change: str | None = None
+    last_turn_kind: ChangeKind | None = None
     last_user_request: str | None = None
     turn_count: int = 0
