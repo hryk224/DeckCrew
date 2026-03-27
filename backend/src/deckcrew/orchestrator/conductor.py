@@ -27,8 +27,10 @@ from deckcrew.state.models import (
     ChangeKind,
     ChangeRecord,
     MusicParams,
+    Section,
     SessionState,
     SectionState,
+    TransitionIntent,
 )
 from deckcrew.state.store import SessionStore
 
@@ -39,6 +41,10 @@ _AUDIENCE_ENERGY_BONUS = 0.1
 # Minor turn constraints
 _MINOR_MAX_BPM_DELTA = 4
 _MINOR_MAX_ENERGY_DELTA = 0.1
+
+# Major section transition thresholds
+_SECTION_ORDER: list[Section] = ["intro", "build", "peak", "release"]
+_PEAK_SUSTAIN_TURNS = 3  # max turns at peak before release
 
 
 def _compute_change_score(current: MusicParams, proposed: MusicParams) -> float:
@@ -146,6 +152,96 @@ def _infer_minor_intent(
     if new_energy < current_energy:
         return "cool_down"
     return "hold"
+
+
+def _step_section(current: Section, direction: int) -> Section:
+    """Move section forward (+1) or backward (-1) within bounds."""
+    idx = _SECTION_ORDER.index(current)
+    new_idx = max(0, min(len(_SECTION_ORDER) - 1, idx + direction))
+    return _SECTION_ORDER[new_idx]
+
+
+def _resolve_major_section(
+    section: SectionState,
+    applied_energy: float,
+    critique: Critique,
+    reactions: list[Reaction],
+    turn_count: int,
+) -> tuple[Section, TransitionIntent, str]:
+    """Determine section transition and intent for a major turn.
+
+    Returns (new_section, new_intent, transition_reason).
+
+    Rules:
+    - Critic severity "high": step back one section (floor at intro)
+    - intro: advance to build when energy >= 0.5
+    - build: advance to peak when energy >= 0.7
+    - peak: move to release when energy < 0.5 or sustained for N turns
+    - release: rebuild to build when energy >= 0.5
+    - Audience energy_delta sum > 0.2: nudges toward forward transition
+
+    Section may stay the same if no condition triggers.
+    Intent is determined after section resolution.
+    """
+    current = section.current_section
+    turns_since_major = turn_count - section.last_major_turn
+    audience_push = sum(r.energy_delta for r in reactions)
+
+    # Critic high severity: step back (intro stays at intro)
+    if critique.severity == "high":
+        new_section = _step_section(current, -1)
+        if new_section != current:
+            intent: TransitionIntent = "cool_down"
+            return new_section, intent, f"Critic flagged high severity — stepping back from {current} to {new_section}"
+        # Already at intro, can't go back further
+        return current, "hold", "Critic flagged high severity but already at intro — holding"
+
+    # Section-specific transition rules
+    new_section = current
+    reason = "No transition triggered"
+
+    if current == "intro":
+        if applied_energy >= 0.5:
+            new_section = "build"
+            reason = f"Energy reached {applied_energy:.0%} — transitioning from intro to build"
+
+    elif current == "build":
+        threshold = 0.65 if audience_push > 0.2 else 0.7
+        if applied_energy >= threshold:
+            new_section = "peak"
+            reason = f"Energy reached {applied_energy:.0%} — transitioning from build to peak"
+            if audience_push > 0.2:
+                reason += " (audience push lowered threshold)"
+
+    elif current == "peak":
+        if applied_energy < 0.5:
+            new_section = "release"
+            reason = f"Energy dropped to {applied_energy:.0%} — transitioning from peak to release"
+        elif turns_since_major >= _PEAK_SUSTAIN_TURNS:
+            new_section = "release"
+            reason = f"Peak sustained for {turns_since_major} turns — transitioning to release"
+
+    elif current == "release":
+        if applied_energy >= 0.5:
+            new_section = "build"
+            reason = f"Energy recovered to {applied_energy:.0%} — rebuilding from release to build"
+
+    # Determine intent after section is resolved
+    if new_section != current:
+        idx_diff = _SECTION_ORDER.index(new_section) - _SECTION_ORDER.index(current)
+        intent = "intensify" if idx_diff > 0 else "cool_down"
+    else:
+        # No section change: infer from energy
+        if applied_energy >= 0.7:
+            intent = "intensify"
+        elif applied_energy <= 0.3:
+            intent = "cool_down"
+        elif critique.severity == "medium":
+            intent = "lift"
+        else:
+            intent = "hold"
+
+    return new_section, intent, reason
 
 
 class Conductor:
@@ -273,7 +369,8 @@ class Conductor:
 
         # 11. Update section state
         new_section = self._update_section(
-            session, kind, change_summary, applied_params
+            session, kind, change_summary, applied_params,
+            critique, reactions,
         )
 
         # 12. Update session state
@@ -310,6 +407,8 @@ class Conductor:
         kind: ChangeKind,
         summary: str,
         applied_params: MusicParams,
+        critique: Critique,
+        reactions: list[Reaction],
     ) -> SectionState:
         """Update section state based on turn kind."""
         section = session.section
@@ -336,10 +435,17 @@ class Conductor:
                 recent_changes=recent,
             )
 
-        # Major: update last_major_turn (section transition logic in M3-03)
+        # Major: resolve section transition and intent
+        new_section_name, new_intent, _transition_reason = _resolve_major_section(
+            section,
+            applied_params.energy,
+            critique,
+            reactions,
+            session.turn_count + 1,
+        )
         return SectionState(
-            current_section=section.current_section,
-            transition_intent=section.transition_intent,
+            current_section=new_section_name,
+            transition_intent=new_intent,
             last_major_turn=session.turn_count + 1,
             recent_changes=recent,
         )
