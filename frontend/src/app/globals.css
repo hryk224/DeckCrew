@@ -48,6 +48,48 @@
   --text-xl: 1.5rem;
 }
 
+/* === Cyberpunk Theme === */
+[data-theme="cyberpunk"] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #06060a;
+  --bg-elevated: #12121a;
+
+  --text-primary: #e0e0f0;
+  --text-secondary: #6a6a8a;
+  --text-accent: #00e5ff;
+
+  --border-default: #1a1a2e;
+
+  --color-groove: #ff2d7b;
+  --color-harmony: #b040ff;
+  --color-crowd: #00e5ff;
+  --color-decision: #39ff14;
+
+  --color-critic: #ff2d7b;
+  --color-audience: #ffb800;
+}
+
+/* === Midnight Club Theme === */
+[data-theme="midnight-club"] {
+  --bg-primary: #1c1714;
+  --bg-secondary: #14100d;
+  --bg-elevated: #241e19;
+
+  --text-primary: #d4c8b8;
+  --text-secondary: #7a6e60;
+  --text-accent: #d4a04a;
+
+  --border-default: #2e261e;
+
+  --color-groove: #e87040;
+  --color-harmony: #9070c0;
+  --color-crowd: #50b8d0;
+  --color-decision: #8cc050;
+
+  --color-critic: #d05050;
+  --color-audience: #d4a04a;
+}
+
 /* === Base === */
 html {
   color-scheme: dark;

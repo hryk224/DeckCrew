@@ -3,8 +3,10 @@
 import { Suspense, useState } from "react";
 import { startSession, submitRequest, runTurn } from "@/lib/api";
 import { SCENARIO_NAMES } from "@/lib/previewData";
+import { THEMES } from "@/lib/themes";
 import { usePreview } from "@/lib/usePreview";
 import { useSessionStream } from "@/lib/useSessionStream";
+import { useTheme } from "@/lib/useTheme";
 import type {
   AudienceFeedbackContent,
   CriticFeedbackContent,
@@ -52,6 +54,7 @@ export default function Home() {
 
 function HomeContent() {
   const preview = usePreview();
+  const currentTheme = useTheme();
   const stream = useSessionStream({ enabled: !preview });
 
   // In preview mode, use fixture data; otherwise use SSE stream
@@ -152,10 +155,21 @@ function HomeContent() {
               {SCENARIO_NAMES.map((s) => (
                 <a
                   key={s}
-                  href={`?preview=${s}`}
+                  href={`?preview=${s}${currentTheme !== "tokyo-night" ? `&theme=${currentTheme}` : ""}`}
                   className={`preview-link ${s === preview.name ? "active" : ""}`}
                 >
                   {s}
+                </a>
+              ))}
+            </div>
+            <div className="preview-nav">
+              {THEMES.map((t) => (
+                <a
+                  key={t.id}
+                  href={`?preview=${preview.name}${t.id !== "tokyo-night" ? `&theme=${t.id}` : ""}`}
+                  className={`preview-link ${t.id === currentTheme ? "active" : ""}`}
+                >
+                  {t.label}
                 </a>
               ))}
             </div>
