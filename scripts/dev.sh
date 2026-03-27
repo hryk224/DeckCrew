@@ -94,7 +94,7 @@ cmd_start() {
     if [ -f "$env_file" ]; then
       env_flag="--env-file $env_file"
     fi
-    setsid uv run uvicorn deckcrew.main:app --reload --port "$BE_PORT" $env_flag \
+    setsid env DEBUG=1 uv run uvicorn deckcrew.main:app --reload --port "$BE_PORT" $env_flag \
       > "$PID_DIR/backend.log" 2>&1 &
     local be_pid=$!
     echo "$be_pid" > "$BE_PID_FILE"

@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -19,6 +21,12 @@ app.include_router(session_router)
 app.include_router(stream_router)
 app.include_router(turn_router)
 app.include_router(memory_router)
+
+# Debug endpoints: only enabled when DEBUG=1
+if os.environ.get("DEBUG", "").strip() in ("1", "true"):
+    from deckcrew.api.debug import router as debug_router
+
+    app.include_router(debug_router)
 
 
 @app.get("/health")

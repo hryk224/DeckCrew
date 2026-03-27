@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from deckcrew.agent.base import AudienceAgent, CriticAgent, DJAgent
 from deckcrew.agent.models import (
@@ -41,24 +42,21 @@ from deckcrew.state.models import (
 from deckcrew.venue.models import VenueContext
 from deckcrew.state.store import SessionStore
 
-# Bonus applied to change score when feedback indicates stagnation
-_CRITIC_ENERGY_BONUS = 0.15
-_AUDIENCE_ENERGY_BONUS = 0.1
+from deckcrew.orchestrator.config import (
+    AUDIENCE_DIR_THRESHOLD,
+    AUDIENCE_ENERGY_BONUS,
+    CRITIC_ENERGY_BONUS,
+    MINOR_MAX_BPM_DELTA,
+    MINOR_MAX_ENERGY_DELTA,
+    PEAK_SUSTAIN_TURNS,
+    VENUE_EARLY_BONUS,
+    VENUE_ENERGY_BONUS,
+)
 
-# Venue-based bonuses
-_VENUE_ENERGY_BONUS = 0.05
-_VENUE_EARLY_BONUS = 0.03
+logger = logging.getLogger(__name__)
 
-# Audience majority threshold (delta beyond this counts as directional)
-_AUDIENCE_DIR_THRESHOLD = 0.05
-
-# Minor turn constraints
-_MINOR_MAX_BPM_DELTA = 4
-_MINOR_MAX_ENERGY_DELTA = 0.1
-
-# Major section transition thresholds
+# Section progression order
 _SECTION_ORDER: list[Section] = ["intro", "build", "peak", "release"]
-_PEAK_SUSTAIN_TURNS = 3  # max turns at peak before release
 
 
 def _compute_change_score(current: MusicParams, proposed: MusicParams) -> float:
@@ -96,17 +94,17 @@ def _apply_feedback_bonus(
 
     # Critic bonus
     if critique.severity in ("medium", "high") and proposes_more_energy:
-        score += _CRITIC_ENERGY_BONUS
+        score += CRITIC_ENERGY_BONUS
         notes.append(f"critic flagged: {critique.issue}")
 
     # Audience bonus (sum of energy_delta across all audiences)
     total_delta = sum(r.energy_delta for r in reactions)
     if total_delta > 0 and proposes_more_energy:
-        score += _AUDIENCE_ENERGY_BONUS
+        score += AUDIENCE_ENERGY_BONUS
 
     # Audience majority direction
-    up_count = sum(1 for r in reactions if r.energy_delta > _AUDIENCE_DIR_THRESHOLD)
-    down_count = sum(1 for r in reactions if r.energy_delta < -_AUDIENCE_DIR_THRESHOLD)
+    up_count = sum(1 for r in reactions if r.energy_delta > AUDIENCE_DIR_THRESHOLD)
+    down_count = sum(1 for r in reactions if r.energy_delta < -AUDIENCE_DIR_THRESHOLD)
     total_count = len(reactions)
 
     if total_count > 0:
@@ -133,17 +131,17 @@ def _apply_feedback_bonus(
     # Venue bonuses
     if venue:
         if venue.room_size == "festival" and proposes_more_energy:
-            score += _VENUE_ENERGY_BONUS
+            score += VENUE_ENERGY_BONUS
             notes.append("festival setting favors energy")
         elif venue.room_size == "intimate" and proposes_less_energy:
-            score += _VENUE_ENERGY_BONUS
+            score += VENUE_ENERGY_BONUS
             notes.append("intimate setting favors restraint")
 
         if venue.time_of_night == "late" and proposes_less_energy:
-            score += _VENUE_ENERGY_BONUS
+            score += VENUE_ENERGY_BONUS
             notes.append("late night favors winding down")
         elif venue.time_of_night == "early" and proposes_less_energy:
-            score += _VENUE_EARLY_BONUS
+            score += VENUE_EARLY_BONUS
             notes.append("early set favors restraint")
 
     return score, notes
@@ -166,9 +164,9 @@ def _clamp_minor(
 
     # BPM: clamp delta
     bpm_delta = adopted.bpm - current.bpm
-    if abs(bpm_delta) > _MINOR_MAX_BPM_DELTA:
+    if abs(bpm_delta) > MINOR_MAX_BPM_DELTA:
         clamped_bpm = current.bpm + (
-            _MINOR_MAX_BPM_DELTA if bpm_delta > 0 else -_MINOR_MAX_BPM_DELTA
+            MINOR_MAX_BPM_DELTA if bpm_delta > 0 else -MINOR_MAX_BPM_DELTA
         )
         suppressions.append(
             f"bpm clamped ({adopted.bpm} -> {clamped_bpm})"
@@ -178,10 +176,10 @@ def _clamp_minor(
 
     # Energy: clamp delta
     energy_delta = adopted.energy - current.energy
-    if abs(energy_delta) > _MINOR_MAX_ENERGY_DELTA:
+    if abs(energy_delta) > MINOR_MAX_ENERGY_DELTA:
         clamped_energy = round(
             current.energy
-            + (_MINOR_MAX_ENERGY_DELTA if energy_delta > 0 else -_MINOR_MAX_ENERGY_DELTA),
+            + (MINOR_MAX_ENERGY_DELTA if energy_delta > 0 else -MINOR_MAX_ENERGY_DELTA),
             2,
         )
         suppressions.append(
@@ -274,7 +272,7 @@ def _resolve_major_section(
         if applied_energy < 0.5:
             new_section = "release"
             reason = f"Energy dropped to {applied_energy:.0%} — transitioning from peak to release"
-        elif turns_since_major >= _PEAK_SUSTAIN_TURNS:
+        elif turns_since_major >= PEAK_SUSTAIN_TURNS:
             new_section = "release"
             reason = f"Peak sustained for {turns_since_major} turns — transitioning to release"
 
@@ -470,6 +468,23 @@ class Conductor:
                     timestamp=datetime.now(UTC).isoformat(),
                 )
             )
+
+        # 16. Log turn summary
+        prev_section = session.section.current_section
+        new_section_name = new_section.current_section
+        transition_str = (
+            f"{prev_section}→{new_section_name}"
+            if prev_section != new_section_name
+            else f"{prev_section}→{new_section_name} (hold)"
+        )
+        logger.info(
+            "[turn] kind=%s turn=%d section=%s adopted=%s reason=%s",
+            kind,
+            updated.turn_count,
+            transition_str,
+            decision.adopted_proposal.agent_name,
+            decision.reason[:80],
+        )
 
         return TurnResult(
             kind=kind,

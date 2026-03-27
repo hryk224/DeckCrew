@@ -15,18 +15,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from deckcrew.orchestrator.config import (
+    BPM_STAGNATION_PENALTY,
+    ENERGY_STAGNATION_PENALTY,
+    FOCUS_REPETITION_PENALTY,
+    LOW_ENERGY_DELTA,
+    REPETITION_MIN_TURNS,
+)
 from deckcrew.state.models import ChangeRecord, MusicParams
-
-# Minimum turns before stagnation checks apply
-MIN_TURNS_FOR_CHECK = 3
-
-# Penalties (negative values reduce score)
-FOCUS_REPETITION_PENALTY = -0.2
-BPM_STAGNATION_PENALTY = -0.15
-ENERGY_STAGNATION_PENALTY = -0.1
-
-# Energy delta below this is considered stagnant
-LOW_ENERGY_DELTA = 0.05
 
 
 @dataclass
@@ -48,10 +44,10 @@ def detect_repetition(
     Returns a list of penalties (may be empty). Each penalty has a
     negative value and a short reason string.
 
-    Only applies after MIN_TURNS_FOR_CHECK turns to let the session
+    Only applies after REPETITION_MIN_TURNS turns to let the session
     develop before penalizing.
     """
-    if turn_count < MIN_TURNS_FOR_CHECK:
+    if turn_count < REPETITION_MIN_TURNS:
         return []
 
     penalties: list[RepetitionPenalty] = []
