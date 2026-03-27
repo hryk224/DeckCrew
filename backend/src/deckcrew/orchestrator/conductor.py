@@ -38,11 +38,19 @@ from deckcrew.state.models import (
     SectionState,
     TransitionIntent,
 )
+from deckcrew.venue.models import VenueContext
 from deckcrew.state.store import SessionStore
 
 # Bonus applied to change score when feedback indicates stagnation
 _CRITIC_ENERGY_BONUS = 0.15
 _AUDIENCE_ENERGY_BONUS = 0.1
+
+# Venue-based bonuses
+_VENUE_ENERGY_BONUS = 0.05
+_VENUE_EARLY_BONUS = 0.03
+
+# Audience majority threshold (delta beyond this counts as directional)
+_AUDIENCE_DIR_THRESHOLD = 0.05
 
 # Minor turn constraints
 _MINOR_MAX_BPM_DELTA = 4
@@ -71,18 +79,20 @@ def _apply_feedback_bonus(
     current: MusicParams,
     critique: Critique,
     reactions: list[Reaction],
+    venue: VenueContext | None = None,
 ) -> tuple[float, list[str]]:
-    """Adjust score based on feedback. Returns (adjusted_score, bonus_notes).
+    """Adjust score based on feedback and venue. Returns (adjusted_score, bonus_notes).
 
     - Critic severity medium or high: bonus for proposals that raise energy.
-      (In M2, medium and high are treated equally.)
     - Audience energy_delta sum > 0: bonus for proposals that raise energy.
-      (Sum across all audiences to support future multi-audience.)
+    - Audience majority direction: small bonus when most audiences agree.
+    - Venue room_size / time_of_night: small bonus aligned with setting.
     """
     score = base_score
     notes: list[str] = []
 
     proposes_more_energy = proposed.energy > current.energy
+    proposes_less_energy = proposed.energy < current.energy
 
     # Critic bonus
     if critique.severity in ("medium", "high") and proposes_more_energy:
@@ -93,7 +103,48 @@ def _apply_feedback_bonus(
     total_delta = sum(r.energy_delta for r in reactions)
     if total_delta > 0 and proposes_more_energy:
         score += _AUDIENCE_ENERGY_BONUS
-        notes.append("audience wanted more energy")
+
+    # Audience majority direction
+    up_count = sum(1 for r in reactions if r.energy_delta > _AUDIENCE_DIR_THRESHOLD)
+    down_count = sum(1 for r in reactions if r.energy_delta < -_AUDIENCE_DIR_THRESHOLD)
+    total_count = len(reactions)
+
+    if total_count > 0:
+        if up_count > total_count / 2 and proposes_more_energy:
+            score += 0.05
+            # Short audience breakdown
+            breakdown = ", ".join(
+                f"{r.audience_name}:{r.energy_delta:+.2f}" for r in reactions
+            )
+            notes.append(
+                f"audience majority ({up_count}/{total_count}) wants more energy "
+                f"[{breakdown}]"
+            )
+        elif down_count > total_count / 2 and proposes_less_energy:
+            score += 0.05
+            breakdown = ", ".join(
+                f"{r.audience_name}:{r.energy_delta:+.2f}" for r in reactions
+            )
+            notes.append(
+                f"audience majority ({down_count}/{total_count}) wants less energy "
+                f"[{breakdown}]"
+            )
+
+    # Venue bonuses
+    if venue:
+        if venue.room_size == "festival" and proposes_more_energy:
+            score += _VENUE_ENERGY_BONUS
+            notes.append("festival setting favors energy")
+        elif venue.room_size == "intimate" and proposes_less_energy:
+            score += _VENUE_ENERGY_BONUS
+            notes.append("intimate setting favors restraint")
+
+        if venue.time_of_night == "late" and proposes_less_energy:
+            score += _VENUE_ENERGY_BONUS
+            notes.append("late night favors winding down")
+        elif venue.time_of_night == "early" and proposes_less_energy:
+            score += _VENUE_EARLY_BONUS
+            notes.append("early set favors restraint")
 
     return score, notes
 
@@ -549,7 +600,7 @@ class Conductor:
             )
             adjusted, notes = _apply_feedback_bonus(
                 base, p.suggested_params, session.current_params,
-                critique, reactions,
+                critique, reactions, venue=session.venue,
             )
             # Anti-repetition penalties
             penalties = detect_repetition(
