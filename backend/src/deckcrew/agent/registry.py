@@ -1,6 +1,7 @@
+from deckcrew.agent.audience_persona import DEFAULT_PERSONAS
 from deckcrew.agent.base import AudienceAgent, CriticAgent, DJAgent
 from deckcrew.agent.mock import MockCrowd, MockGroove, MockHarmony
-from deckcrew.agent.mock_audience import MockAudience
+from deckcrew.agent.mock_audience import MockPersonaAudience
 from deckcrew.agent.mock_critic import MockCritic
 
 
@@ -24,7 +25,7 @@ def create_critic() -> CriticAgent:
 def create_audiences() -> list[AudienceAgent]:
     """Create the default set of Audience agents.
 
-    Returns a list for future multi-audience support (M5).
-    Replace MockAudience with LLM-backed implementations when ready.
+    Returns one agent per persona (clubber, chiller, explorer).
+    Replace MockPersonaAudience with LLM-backed implementations when ready.
     """
-    return [MockAudience()]
+    return [MockPersonaAudience(persona) for persona in DEFAULT_PERSONAS]
