@@ -1,7 +1,16 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { startSession, submitRequest, runTurn } from "@/lib/api";
+import { Suspense, useCallback, useState } from "react";
+import {
+  startSession,
+  submitRequest,
+  runTurn,
+  fetchInterventions,
+  fetchProfile,
+  clearMemory,
+  type MemoryIntervention,
+  type MemoryProfile,
+} from "@/lib/api";
 import { SCENARIO_NAMES } from "@/lib/previewData";
 import { THEMES } from "@/lib/themes";
 import { usePreview } from "@/lib/usePreview";
@@ -468,6 +477,114 @@ function HomeContent() {
           </div>
         </section>
       )}
+
+      {/* Memory (debug panel, hidden in preview mode) */}
+      {!preview && <MemoryPanel />}
     </div>
+  );
+}
+
+function MemoryPanel() {
+  const [open, setOpen] = useState(false);
+  const [profile, setProfile] = useState<MemoryProfile | null>(null);
+  const [interventions, setInterventions] = useState<
+    MemoryIntervention[] | null
+  >(null);
+  const [clearing, setClearing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [p, i] = await Promise.all([
+        fetchProfile(),
+        fetchInterventions(),
+      ]);
+      setProfile(p);
+      setInterventions(i);
+    } catch {
+      // Backend not available; leave null
+    }
+  }, []);
+
+  function handleToggle() {
+    const next = !open;
+    setOpen(next);
+    if (next) {
+      loadData();
+    }
+  }
+
+  async function handleClear() {
+    setClearing(true);
+    try {
+      await clearMemory();
+      await loadData();
+    } catch {
+      // ignore
+    } finally {
+      setClearing(false);
+    }
+  }
+
+  return (
+    <section className="section memory-panel">
+      <button
+        type="button"
+        className="memory-toggle"
+        onClick={handleToggle}
+      >
+        <span>{open ? "▼" : "▶"}</span>
+        <span className="section-label" style={{ marginBottom: 0 }}>
+          Local Memory
+          {interventions !== null && (
+            <span className="memory-count">
+              {interventions.length} intervention
+              {interventions.length !== 1 ? "s" : ""}
+            </span>
+          )}
+        </span>
+      </button>
+
+      {open && (
+        <div className="memory-content">
+          {profile && (
+            <div className="memory-profile">
+              <span className="memory-field">
+                mood={profile.preferred_mood ?? "—"}
+              </span>
+              <span className="memory-field">
+                energy={profile.min_energy.toFixed(2)}-
+                {profile.max_energy.toFixed(2)}
+              </span>
+              <span className="memory-field">
+                focus={profile.preferred_focus ?? "—"}
+              </span>
+            </div>
+          )}
+
+          {interventions && interventions.length > 0 && (
+            <ul className="memory-interventions">
+              {interventions.map((iv, idx) => (
+                <li key={idx} className="memory-intervention">
+                  Turn {iv.turn}: &quot;{iv.text}&quot; → {iv.adopted_agent}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {interventions && interventions.length === 0 && (
+            <p className="memory-empty">No interventions recorded</p>
+          )}
+
+          <button
+            type="button"
+            className="memory-clear"
+            disabled={clearing || (interventions?.length ?? 0) === 0}
+            onClick={handleClear}
+          >
+            {clearing ? "Clearing..." : "Clear Memory"}
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

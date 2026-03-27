@@ -23,3 +23,46 @@ export async function submitRequest(text: string): Promise<void> {
 export async function runTurn(): Promise<void> {
   await post("/session/turn");
 }
+
+// --- Memory API ---
+
+export interface MemoryIntervention {
+  session_id: string;
+  turn: number;
+  text: string;
+  adopted_agent: string;
+  timestamp: string;
+}
+
+export interface MemoryProfile {
+  preferred_mood: string | null;
+  min_energy: number;
+  max_energy: number;
+  preferred_focus: string | null;
+  intervention_count: number;
+}
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`);
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`${res.status}: ${detail}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export async function fetchInterventions(): Promise<MemoryIntervention[]> {
+  return get<MemoryIntervention[]>("/memory/interventions");
+}
+
+export async function fetchProfile(): Promise<MemoryProfile> {
+  return get<MemoryProfile>("/memory/profile");
+}
+
+export async function clearMemory(): Promise<void> {
+  const res = await fetch(`${API_URL}/memory`, { method: "DELETE" });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`${res.status}: ${detail}`);
+  }
+}
