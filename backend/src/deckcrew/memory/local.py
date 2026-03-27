@@ -8,6 +8,7 @@ Memory scope: local process context (single user, no auth).
 """
 
 from deckcrew.memory.models import InterventionRecord, MemoryState, PreferenceProfile
+from deckcrew.memory.profile import update_profile
 
 
 class LocalMemoryStore:
@@ -24,9 +25,7 @@ class LocalMemoryStore:
 
     async def add_intervention(self, record: InterventionRecord) -> None:
         self._state.interventions.append(record)
-        self._state.profile = PreferenceProfile(
-            intervention_count=len(self._state.interventions),
-        )
+        self._state.profile = update_profile(self._state.profile, record)
 
     async def get_profile(self) -> PreferenceProfile:
         return self._state.profile
