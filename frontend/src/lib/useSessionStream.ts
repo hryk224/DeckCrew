@@ -30,7 +30,16 @@ export interface SessionStreamState {
   reset: () => void;
 }
 
-export function useSessionStream(): SessionStreamState {
+interface UseSessionStreamOptions {
+  /** Set to false to skip SSE connection (e.g. in preview mode). */
+  enabled?: boolean;
+}
+
+export function useSessionStream(
+  options: UseSessionStreamOptions = {},
+): SessionStreamState {
+  const { enabled = true } = options;
+
   const [session, setSession] = useState<SessionState | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
@@ -38,10 +47,8 @@ export function useSessionStream(): SessionStreamState {
   const [connected, setConnected] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
-  const connect = useCallback(() => {
-    if (esRef.current) {
-      esRef.current.close();
-    }
+  useEffect(() => {
+    if (!enabled) return;
 
     const es = new EventSource(`${API_URL}/session/stream`);
     esRef.current = es;
@@ -78,14 +85,12 @@ export function useSessionStream(): SessionStreamState {
     es.addEventListener("session.heartbeat", () => {
       setConnected(true);
     });
-  }, []);
 
-  useEffect(() => {
-    connect();
     return () => {
-      esRef.current?.close();
+      es.close();
+      esRef.current = null;
     };
-  }, [connect]);
+  }, [enabled]);
 
   const reset = useCallback(() => {
     setSession(null);

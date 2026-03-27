@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { startSession, submitRequest, runTurn } from "@/lib/api";
+import { SCENARIO_NAMES } from "@/lib/previewData";
+import { usePreview } from "@/lib/usePreview";
 import { useSessionStream } from "@/lib/useSessionStream";
 import type {
   AudienceFeedbackContent,
@@ -41,8 +43,25 @@ function energyLabel(delta: number): string {
 }
 
 export default function Home() {
-  const { session, proposals, feedback, decision, connected, reset } =
-    useSessionStream();
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
+  const preview = usePreview();
+  const stream = useSessionStream({ enabled: !preview });
+
+  // In preview mode, use fixture data; otherwise use SSE stream
+  const session = preview ? preview.session : stream.session;
+  const proposals = preview ? preview.proposals : stream.proposals;
+  const feedback = preview ? preview.feedback : stream.feedback;
+  const decision = preview ? preview.decision : stream.decision;
+  const connected = preview ? true : stream.connected;
+  const reset = stream.reset;
+
   const [requestText, setRequestText] = useState("");
   const [loading, setLoading] = useState<LoadingState>(null);
   const [error, setError] = useState<string | null>(null);
@@ -124,34 +143,53 @@ export default function Home() {
     <div className="app-container">
       <header className="app-header">
         <h1 className="app-title">DeckCrew</h1>
-        <div className="header-controls">
-          <span
-            className={`connection-status ${connected ? "connected" : ""}`}
-          >
-            {connected ? "Connected" : "Disconnected"}
-          </span>
-          {!isRunning ? (
-            <button
-              className="header-button"
-              type="button"
-              disabled={!connected || isBusy}
-              onClick={handleStartSession}
+
+        {preview ? (
+          <div className="preview-banner">
+            <span className="preview-label">Preview</span>
+            <span className="preview-scenario">{preview.name}</span>
+            <div className="preview-nav">
+              {SCENARIO_NAMES.map((s) => (
+                <a
+                  key={s}
+                  href={`?preview=${s}`}
+                  className={`preview-link ${s === preview.name ? "active" : ""}`}
+                >
+                  {s}
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="header-controls">
+            <span
+              className={`connection-status ${connected ? "connected" : ""}`}
             >
-              {loading === "starting" ? "Starting..." : "Start Session"}
-            </button>
-          ) : (
-            <button
-              className="header-button"
-              type="button"
-              disabled={isBusy}
-              onClick={handleRunTurn}
+              {connected ? "Connected" : "Disconnected"}
+            </span>
+            {!isRunning ? (
+              <button
+                className="header-button"
+                type="button"
+                disabled={!connected || isBusy}
+                onClick={handleStartSession}
+              >
+                {loading === "starting" ? "Starting..." : "Start Session"}
+              </button>
+            ) : (
+              <button
+                className="header-button"
+                type="button"
+                disabled={isBusy}
+                onClick={handleRunTurn}
             >
               {loading === "turning" && !requestText
                 ? "Running..."
                 : "Run Turn"}
             </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
         {error && <p className="error-message">{error}</p>}
         {loadingLabel && !error && (
           <p className="loading-message">{loadingLabel}</p>
@@ -370,30 +408,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Request */}
-      <section className="section">
-        <h2 className="section-label">Request</h2>
-        <div className="request-form">
-          <textarea
-            className="request-input"
-            placeholder="Send a request to the DJs..."
-            rows={2}
-            disabled={!isRunning || isBusy}
-            value={requestText}
-            onChange={(e) => setRequestText(e.target.value)}
-          />
-          <button
-            className="request-button"
-            type="button"
-            disabled={!isRunning || requestText.trim() === "" || isBusy}
-            onClick={handleSendRequest}
-          >
-            {loading === "sending" || loading === "turning"
-              ? loadingLabel
-              : "Send"}
-          </button>
-        </div>
-      </section>
+      {/* Request (hidden in preview mode) */}
+      {!preview && (
+        <section className="section">
+          <h2 className="section-label">Request</h2>
+          <div className="request-form">
+            <textarea
+              className="request-input"
+              placeholder="Send a request to the DJs..."
+              rows={2}
+              disabled={!isRunning || isBusy}
+              value={requestText}
+              onChange={(e) => setRequestText(e.target.value)}
+            />
+            <button
+              className="request-button"
+              type="button"
+              disabled={!isRunning || requestText.trim() === "" || isBusy}
+              onClick={handleSendRequest}
+            >
+              {loading === "sending" || loading === "turning"
+                ? loadingLabel
+                : "Send"}
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
