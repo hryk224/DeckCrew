@@ -81,6 +81,18 @@ body {
   letter-spacing: 0.05em;
 }
 
+.connection-status {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+}
+
+.connection-status.connected {
+  color: var(--color-decision);
+}
+
 /* === Section (shared panel style) === */
 .section {
   background-color: var(--bg-primary);
@@ -96,6 +108,16 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: var(--space-md);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+
+.turn-count {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* === Now Playing === */
@@ -173,6 +195,13 @@ body {
   font-size: var(--text-sm);
   color: var(--text-primary);
   line-height: 1.5;
+}
+
+.proposal-perspective {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: var(--space-xs);
 }
 
 /* === Decision === */
