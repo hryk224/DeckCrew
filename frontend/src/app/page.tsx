@@ -15,6 +15,14 @@ import type {
 
 type LoadingState = null | "starting" | "sending" | "turning";
 
+const SECTION_SYMBOLS: Record<string, string> = {
+  intro: "◇",
+  build: "△",
+  peak: "◆",
+  release: "▽",
+};
+
+
 function extractCritic(
   items: FeedbackItem[],
 ): (FeedbackItem & { source: "critic" }) | null {
@@ -145,7 +153,11 @@ function HomeContent() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1 className="app-title">DeckCrew</h1>
+        <div className="app-title-row">
+          <span className={`record-dot ${isRunning ? "spinning" : ""}`} />
+          <h1 className="app-title">DeckCrew</h1>
+          <span className={`record-dot ${isRunning ? "spinning" : ""}`} />
+        </div>
 
         {preview ? (
           <div className="preview-banner">
@@ -217,6 +229,15 @@ function HomeContent() {
           {session && (
             <span className="turn-count">Turn {session.turn_count}</span>
           )}
+          {isRunning && (
+            <span className="equalizer">
+              <span className="eq-bar" />
+              <span className="eq-bar" />
+              <span className="eq-bar" />
+              <span className="eq-bar" />
+              <span className="eq-bar" />
+            </span>
+          )}
         </h2>
 
         {session?.section && (
@@ -225,17 +246,16 @@ function HomeContent() {
               className="section-badge"
               data-section={session.section.current_section}
             >
+              {SECTION_SYMBOLS[session.section.current_section] ?? ""}{" "}
               {session.section.current_section.toUpperCase()}
             </span>
             <span className="section-intent">
               → {session.section.transition_intent.replace("_", " ")}
             </span>
-            {session.last_turn_kind && (
-              <span
-                className="turn-kind-badge"
-                data-kind={session.last_turn_kind}
-              >
-                {session.last_turn_kind}
+            {isRunning && (
+              <span className="live-indicator">
+                <span className="live-dot" />
+                Live
               </span>
             )}
           </div>
