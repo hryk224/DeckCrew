@@ -22,6 +22,7 @@ from deckcrew.api.events import (
 )
 from deckcrew.music.base import MusicBackend
 from deckcrew.orchestrator.models import Decision, RejectionDetail, TurnResult
+from deckcrew.orchestrator.repetition import detect_repetition
 from deckcrew.state.models import (
     MAX_RECENT_CHANGES,
     ChangeKind,
@@ -511,7 +512,7 @@ class Conductor:
         critique: Critique,
         reactions: list[Reaction],
     ) -> Decision:
-        """No user request: pick by change score + feedback bonus."""
+        """No user request: pick by change score + feedback bonus - repetition penalty."""
         scored: list[tuple[Proposal, float, list[str]]] = []
         for p in proposals:
             base = _compute_change_score(
@@ -521,6 +522,17 @@ class Conductor:
                 base, p.suggested_params, session.current_params,
                 critique, reactions,
             )
+            # Anti-repetition penalties
+            penalties = detect_repetition(
+                session.current_params,
+                p.suggested_params,
+                list(session.section.recent_changes),
+                session.turn_count,
+            )
+            for pen in penalties:
+                adjusted += pen.penalty
+                notes.append(pen.reason)
+
             scored.append((p, adjusted, notes))
 
         scored.sort(key=lambda x: x[1], reverse=True)
