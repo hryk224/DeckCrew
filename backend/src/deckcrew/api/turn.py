@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from deckcrew.agent.registry import create_agents
+from deckcrew.agent.registry import create_agents, create_audiences, create_critic
 from deckcrew.api.event_bus import event_bus
 from deckcrew.music.registry import music_backend
 from deckcrew.orchestrator.conductor import Conductor
@@ -21,6 +21,8 @@ async def execute_turn() -> TurnResult:
 
     conductor = Conductor(
         agents=create_agents(),
+        critic=create_critic(),
+        audiences=create_audiences(),
         store=session_store,
         bus=event_bus,
         music=music_backend,
