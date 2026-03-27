@@ -427,6 +427,14 @@ body::before {
   color: var(--text-secondary);
 }
 
+.venue-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+  letter-spacing: 0.04em;
+}
+
 .live-indicator {
   display: flex;
   align-items: center;
@@ -626,6 +634,37 @@ body::before {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--color-audience);
+}
+
+.feedback-energy-delta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Persona-specific audience colors */
+.feedback-card[data-persona="clubber"] {
+  border-left-color: var(--color-groove);
+}
+
+.feedback-card[data-persona="clubber"] .feedback-source-label {
+  color: var(--color-groove);
+}
+
+.feedback-card[data-persona="chiller"] {
+  border-left-color: var(--color-harmony);
+}
+
+.feedback-card[data-persona="chiller"] .feedback-source-label {
+  color: var(--color-harmony);
+}
+
+.feedback-card[data-persona="explorer"] {
+  border-left-color: var(--text-accent);
+}
+
+.feedback-card[data-persona="explorer"] .feedback-source-label {
+  color: var(--text-accent);
 }
 
 .feedback-main {

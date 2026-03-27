@@ -270,6 +270,12 @@ function HomeContent() {
           </div>
         )}
 
+        {session?.venue && (
+          <div className="venue-badge">
+            {session.venue.room_size} · {session.venue.time_of_night.replace("_", " ")} · {session.venue.event_vibe}
+          </div>
+        )}
+
         <div className="now-playing-params">
           <div className="param">
             <span className="param-key">Mood</span>
@@ -361,7 +367,7 @@ function HomeContent() {
               {critic ? (
                 <>
                   <p className="feedback-main">
-                    {(critic.content as CriticFeedbackContent).issue}
+                    &ldquo;{(critic.content as CriticFeedbackContent).issue}&rdquo;
                   </p>
                   <p className="feedback-detail">
                     {(critic.content as CriticFeedbackContent).suggestion}
@@ -374,30 +380,28 @@ function HomeContent() {
 
             {/* Audience (list, supports future multi-audience) */}
             <div className="feedback-audience-list">
-              {audiences.map((a) => (
-                <div
-                  key={a.name}
-                  className="feedback-card"
-                  data-source="audience"
-                >
-                  <div className="feedback-header">
-                    <span className="feedback-source-label">
-                      {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
-                    </span>
-                    <span className="feedback-energy-label">
-                      {energyLabel(
-                        (a.content as AudienceFeedbackContent).energy_delta,
-                      )}
-                    </span>
+              {audiences.map((a) => {
+                const content = a.content as AudienceFeedbackContent;
+                const delta = content.energy_delta;
+                const deltaStr = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
+                return (
+                  <div
+                    key={a.name}
+                    className="feedback-card"
+                    data-source="audience"
+                    data-persona={a.name}
+                  >
+                    <div className="feedback-header">
+                      <span className="feedback-source-label">
+                        {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
+                      </span>
+                      <span className="feedback-energy-delta">{deltaStr}</span>
+                    </div>
+                    <p className="feedback-main">&ldquo;{content.reaction}&rdquo;</p>
+                    <p className="feedback-detail">{content.reason}</p>
                   </div>
-                  <p className="feedback-main">
-                    {(a.content as AudienceFeedbackContent).reaction}
-                  </p>
-                  <p className="feedback-detail">
-                    {(a.content as AudienceFeedbackContent).reason}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

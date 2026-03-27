@@ -25,27 +25,27 @@ class MockCritic:
 
         if turn < 1:
             return Critique(
-                issue="No prior changes to evaluate",
+                issue="Still warming up — let's see where this goes.",
                 severity="low",
-                suggestion="Let the session develop before critiquing",
+                suggestion="Give the set a few turns to develop.",
             )
 
         if turn >= 3 and params.energy <= 0.55:
             return Critique(
-                issue="Energy has been low for several turns",
+                issue="The energy's been flat for a while now. The floor's losing interest.",
                 severity="medium",
-                suggestion="Consider a bigger energy shift to avoid flatness",
+                suggestion="Push the energy up — try a bigger shift or a tempo change.",
             )
 
         if turn >= 3 and params.bpm <= 118:
             return Critique(
-                issue="Tempo has stayed low for several turns",
+                issue="The tempo's been dragging. It's starting to feel sluggish.",
                 severity="medium",
-                suggestion="A tempo increase would break the monotony",
+                suggestion="Pick up the pace. A BPM bump would break the monotony.",
             )
 
         return Critique(
-            issue="Flow is progressing well",
+            issue="The set's moving nicely. No complaints from me.",
             severity="low",
-            suggestion="No immediate changes needed",
+            suggestion="Keep the momentum going.",
         )

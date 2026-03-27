@@ -112,6 +112,9 @@ class MockPersonaAudience:
         energy_gap = pref_energy - params.energy
         bpm_gap = abs(params.bpm - pref_bpm)
 
+        # Persona-specific voice lines
+        lines = _PERSONA_LINES.get(p.name, _DEFAULT_LINES)
+
         # High change sensitivity + stale session = boredom
         if (
             sensitivity >= 0.6
@@ -120,7 +123,7 @@ class MockPersonaAudience:
         ):
             return Reaction(
                 audience_name=self.name,
-                reaction="Getting bored, want something new",
+                reaction=lines["bored"],
                 energy_delta=round(0.2 * density_mult, 2),
                 reason=(
                     f"{p.label} craves change but nothing shifted recently"
@@ -132,7 +135,7 @@ class MockPersonaAudience:
             delta = min(energy_gap * 0.6 * density_mult, 0.4)
             return Reaction(
                 audience_name=self.name,
-                reaction="Needs more energy!",
+                reaction=lines["low_energy"],
                 energy_delta=round(delta, 2),
                 reason=(
                     f"{p.label} prefers energy around "
@@ -145,7 +148,7 @@ class MockPersonaAudience:
             delta = max(energy_gap * 0.6 * density_mult, -0.4)
             return Reaction(
                 audience_name=self.name,
-                reaction="Too intense, dial it back",
+                reaction=lines["high_energy"],
                 energy_delta=round(delta, 2),
                 reason=(
                     f"{p.label} prefers energy around "
@@ -158,7 +161,7 @@ class MockPersonaAudience:
             direction = "fast" if params.bpm > pref_bpm else "slow"
             return Reaction(
                 audience_name=self.name,
-                reaction=f"Tempo feels too {direction}",
+                reaction=lines[f"too_{direction}"],
                 energy_delta=round(
                     (-0.1 if direction == "fast" else 0.1) * density_mult, 2
                 ),
@@ -171,7 +174,46 @@ class MockPersonaAudience:
         # Comfortable zone
         return Reaction(
             audience_name=self.name,
-            reaction="Enjoying this",
+            reaction=lines["happy"],
             energy_delta=0.0,
             reason=f"{p.label} is comfortable with the current vibe",
         )
+
+
+# Persona-specific voice lines for conversational tone
+_PERSONA_LINES: dict[str, dict[str, str]] = {
+    "clubber": {
+        "bored": "Yo, switch it up! This floor's going dead.",
+        "low_energy": "C'mon, turn it up! We came here to dance!",
+        "high_energy": "Whoa, even I need a breather... ease off a bit.",
+        "too_fast": "The tempo's wild, I can't keep up!",
+        "too_slow": "Pick up the pace, let's get moving!",
+        "happy": "Yeah, this is it! Keep it rolling!",
+    },
+    "chiller": {
+        "bored": "Hmm, I wouldn't mind a little change of scenery.",
+        "low_energy": "Could use a touch more warmth, actually.",
+        "high_energy": "Whoa, way too much... I need some space to breathe.",
+        "too_fast": "This is rushing... can we slow it down?",
+        "too_slow": "The pace is fine, but a little more movement would be nice.",
+        "happy": "This is perfect. Just floating along.",
+    },
+    "explorer": {
+        "bored": "We've been here before. Show me something I haven't heard.",
+        "low_energy": "Interesting direction, but it needs more push.",
+        "high_energy": "The energy's great, but let's try something unexpected.",
+        "too_fast": "Fast is fine, but it's getting predictable at this tempo.",
+        "too_slow": "Slow can work if it goes somewhere new.",
+        "happy": "Ooh, I like where this is going. Keep exploring.",
+    },
+}
+
+_DEFAULT_LINES: dict[str, str] = {
+    "bored": "Getting bored, want something new.",
+    "low_energy": "Needs more energy!",
+    "high_energy": "Too intense, dial it back.",
+    "too_fast": "Tempo feels too fast.",
+    "too_slow": "Tempo feels too slow.",
+    "happy": "Enjoying this.",
+}
+
