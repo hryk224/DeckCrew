@@ -1,0 +1,247 @@
+/* === Reset === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* === Tokyo Night Design Tokens === */
+:root {
+  /* Background */
+  --bg-primary: #1a1b26;
+  --bg-secondary: #16161e;
+  --bg-elevated: #1e1f2b;
+
+  /* Text */
+  --text-primary: #a9b1d6;
+  --text-secondary: #565f89;
+  --text-accent: #7aa2f7;
+
+  /* Border */
+  --border-default: #292e42;
+
+  /* Agent accent colors */
+  --color-groove: #ff9e64;
+  --color-harmony: #bb9af7;
+  --color-crowd: #7dcfff;
+  --color-decision: #9ece6a;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+}
+
+/* === Base === */
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  min-height: 100dvh;
+}
+
+/* === Layout === */
+.app-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.app-header {
+  text-align: center;
+  padding: var(--space-md) 0;
+}
+
+.app-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  color: var(--text-accent);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* === Section (shared panel style) === */
+.section {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: var(--space-lg);
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-md);
+}
+
+/* === Now Playing === */
+.now-playing-params {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md) var(--space-xl);
+}
+
+.param {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.param-key {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.param-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+/* === DJ Proposals === */
+.proposals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.proposal-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: var(--space-md);
+  border-top: 3px solid var(--border-default);
+}
+
+.proposal-card[data-agent="groove"] {
+  border-top-color: var(--color-groove);
+}
+
+.proposal-card[data-agent="harmony"] {
+  border-top-color: var(--color-harmony);
+}
+
+.proposal-card[data-agent="crowd"] {
+  border-top-color: var(--color-crowd);
+}
+
+.proposal-agent {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.proposal-card[data-agent="groove"] .proposal-agent {
+  color: var(--color-groove);
+}
+
+.proposal-card[data-agent="harmony"] .proposal-agent {
+  color: var(--color-harmony);
+}
+
+.proposal-card[data-agent="crowd"] .proposal-agent {
+  color: var(--color-crowd);
+}
+
+.proposal-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* === Decision === */
+.decision-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.decision-adopted {
+  font-family: var(--font-mono);
+  color: var(--color-decision);
+}
+
+.decision-reason {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* === Request === */
+.request-form {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.request-input {
+  flex: 1;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  resize: none;
+}
+
+.request-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.request-input:focus {
+  outline: none;
+  border-color: var(--text-accent);
+}
+
+.request-button {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: var(--space-sm) var(--space-lg);
+  color: var(--text-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.request-button:hover {
+  border-color: var(--text-accent);
+}
+
+/* === Responsive === */
+@media (max-width: 640px) {
+  .proposals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-form {
+    flex-direction: column;
+  }
+}
