@@ -13,6 +13,9 @@ dist/
 .ruff_cache/
 .pytest_cache/
 
+# Dev server
+.dev-pids/
+
 # Environment
 .env
 .env.local

@@ -58,6 +58,27 @@ lsof -i :3000 -t 2>/dev/null && echo "3000 使用中" || echo "3000 空き"
 lsof -i :8000 -t 2>/dev/null && echo "8000 使用中" || echo "8000 空き"
 ```
 
+または、dev 管理スクリプトを使用:
+
+```bash
+npm run dev:start    # 両サーバーを起動（PID を .dev-pids/ に保存）
+npm run dev:stop     # 保存した PID で停止
+npm run dev:restart  # 停止 → 起動
+npm run dev:status   # 実行状態を表示
+```
+
+### デザイン確認
+
+バックエンドなしで固定 UI 状態を確認:
+
+```bash
+npm run dev:start
+npm run dev:preview              # 利用可能なシナリオ一覧
+npm run dev:preview build-major  # preview URL を表示
+# 表示された URL をブラウザで開く
+npm run dev:stop
+```
+
 バックエンドの疎通確認:
 
 ```bash

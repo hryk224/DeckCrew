@@ -58,6 +58,27 @@ lsof -i :3000 -t 2>/dev/null && echo "3000 still in use" || echo "3000 free"
 lsof -i :8000 -t 2>/dev/null && echo "8000 still in use" || echo "8000 free"
 ```
 
+Alternatively, use the dev management script:
+
+```bash
+npm run dev:start    # Start both servers (PIDs saved to .dev-pids/)
+npm run dev:stop     # Stop via saved PIDs
+npm run dev:restart  # Stop then start
+npm run dev:status   # Show running state
+```
+
+### Design Preview
+
+Preview fixed UI states without running the backend:
+
+```bash
+npm run dev:start
+npm run dev:preview          # List available scenarios
+npm run dev:preview build-major  # Print preview URL
+# Open the URL in your browser
+npm run dev:stop
+```
+
 Verify the backend is running:
 
 ```bash

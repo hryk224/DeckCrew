@@ -3,7 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "format:md": "prettier --write \"**/*.md\" \"!**/node_modules/**\""
+    "format:md": "prettier --write \"**/*.md\" \"!**/node_modules/**\"",
+    "dev:start": "bash scripts/dev.sh start",
+    "dev:stop": "bash scripts/dev.sh stop",
+    "dev:restart": "bash scripts/dev.sh restart",
+    "dev:preview": "bash scripts/dev.sh preview",
+    "dev:status": "bash scripts/dev.sh status"
   },
   "devDependencies": {
     "prettier": "3.5.3"
