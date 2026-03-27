@@ -2,9 +2,12 @@
 
 Connects to models/lyria-realtime-exp through the Gemini Live API
 WebSocket. All Lyria-specific protocol details are contained here.
+
+Requires api_version='v1alpha' for the Lyria Realtime endpoint.
 """
 
 import logging
+import os
 from typing import Any
 
 from google import genai
@@ -14,7 +17,7 @@ from deckcrew.state.models import MusicParams
 
 logger = logging.getLogger(__name__)
 
-_MODEL = "models/lyria-realtime-exp"
+_DEFAULT_LYRIA_MODEL = "models/lyria-realtime-exp"
 
 
 class LyriaMusicBackend:
@@ -30,20 +33,28 @@ class LyriaMusicBackend:
                 "LYRIA_API_KEY is also accepted for backward compatibility. "
                 "Set the environment variable or switch to MUSIC_BACKEND=mock."
             )
-        self._client = genai.Client(api_key=api_key)
+        self._client = genai.Client(
+            api_key=api_key,
+            http_options={"api_version": "v1alpha"},
+        )
+        self._model = os.environ.get("LYRIA_MODEL", _DEFAULT_LYRIA_MODEL)
         self._session: Any = None
         self._last_bpm: int | None = None
 
     async def start(self) -> None:
         """Open a WebSocket session and start playback."""
         self._session = await self._client.aio.live.music.connect(
-            model=_MODEL
+            model=self._model
         ).__aenter__()
         await self._session.play()
         logger.info("[lyria] Session started, playback active")
 
     async def apply(self, params: MusicParams) -> None:
-        """Send updated parameters to the Lyria session."""
+        """Send updated parameters to the Lyria session.
+
+        If the WebSocket has been disconnected (idle timeout etc.),
+        automatically reconnects before sending commands.
+        """
         if self._session is None:
             logger.warning("[lyria] apply() called but session is not started")
             return
@@ -57,16 +68,42 @@ class LyriaMusicBackend:
                 self._last_bpm,
                 params.bpm,
             )
-            await self._session.reset_context()
+            try:
+                await self._session.reset_context()
+            except Exception:
+                logger.info("[lyria] reset_context failed, reconnecting")
+                await self._reconnect()
 
-        await self._send_command(command)
+        try:
+            await self._send_command(command)
+        except Exception:
+            logger.info("[lyria] _send_command failed, reconnecting and retrying")
+            await self._reconnect()
+            await self._send_command(command)
         self._last_bpm = params.bpm
+
+    async def _reconnect(self) -> None:
+        """Close stale session and open a fresh one."""
+        if self._session is not None:
+            try:
+                await self._session.close()
+            except Exception:
+                pass
+            self._session = None
+        self._session = await self._client.aio.live.music.connect(
+            model=self._model
+        ).__aenter__()
+        await self._session.play()
+        logger.info("[lyria] Reconnected and playback resumed")
 
     async def stop(self) -> None:
         """Stop playback and close the session."""
         if self._session is not None:
-            await self._session.stop()
-            await self._session.__aexit__(None, None, None)
+            try:
+                await self._session.stop()
+            except Exception:
+                logger.warning("[lyria] stop() failed, closing anyway")
+            await self._session.close()
             self._session = None
             logger.info("[lyria] Session stopped and closed")
 

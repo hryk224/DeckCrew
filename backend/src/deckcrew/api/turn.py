@@ -1,3 +1,6 @@
+import logging
+import traceback
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -9,6 +12,8 @@ from deckcrew.orchestrator.conductor import Conductor
 from deckcrew.orchestrator.models import TurnResult
 from deckcrew.state.models import ChangeKind
 from deckcrew.state.store import session_store
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["turn"])
 
@@ -43,4 +48,8 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
         music=music_backend,
         memory=memory_store,
     )
-    return await conductor.run_turn(session, kind=kind)
+    try:
+        return await conductor.run_turn(session, kind=kind)
+    except Exception as e:
+        logger.error("run_turn failed: %s\n%s", e, traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Turn failed: {e}")

@@ -41,7 +41,7 @@ npm run dev
 
 # ターミナル 2: バックエンド (http://localhost:8000)
 cd backend
-uv run uvicorn deckcrew.main:app --reload --port 8000
+uv run uvicorn deckcrew.main:app --reload --port 8000 --env-file ../.env
 ```
 
 dev server の停止（WSL2 では `Ctrl+C` で子プロセスが残る場合がある）:
@@ -90,13 +90,14 @@ curl http://localhost:8000/health
 
 `.env.example` で定義。開発開始前に `.env` へコピーすること。
 
-| 変数名                | デフォルト              | 説明                                                                         |
-| --------------------- | ----------------------- | ---------------------------------------------------------------------------- |
-| `MUSIC_BACKEND`       | `mock`                  | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時                   |
-| `GOOGLE_API_KEY`      | (空)                    | Google API キー（Lyria / Gemini LLM 共通）。`LYRIA_API_KEY` も後方互換で有効 |
-| `LLM_MODEL`           | (空)                    | エージェント呼び出しに使用する LLM モデル識別子                              |
-| `BACKEND_PORT`        | `8000`                  | バックエンドサーバーのポート番号                                             |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | フロントエンドが参照するバックエンド API の URL                              |
+| 変数名                | デフォルト                  | 説明                                                       |
+| --------------------- | --------------------------- | ---------------------------------------------------------- |
+| `MUSIC_BACKEND`       | `mock`                      | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
+| `GOOGLE_API_KEY`      | (空)                        | Google API キー（Lyria / Gemini LLM 共通）                 |
+| `LYRIA_MODEL`         | `models/lyria-realtime-exp` | 音楽生成モデル                                             |
+| `LLM_MODEL`           | (空)                        | エージェント用 LLM モデル（例: `gemini-2.0-flash`）        |
+| `BACKEND_PORT`        | `8000`                      | バックエンドサーバーのポート番号                           |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`     | フロントエンドが参照するバックエンド API の URL            |
 
 ## 設定ファイル
 

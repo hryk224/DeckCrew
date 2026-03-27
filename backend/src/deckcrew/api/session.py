@@ -1,9 +1,14 @@
+import logging
+import traceback
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from deckcrew.music.registry import music_backend
 from deckcrew.state.models import SessionState
 from deckcrew.state.store import session_store
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/session", tags=["session"])
 
@@ -24,7 +29,11 @@ async def create_session() -> SessionState:
     if session_store.get_active() is not None:
         await music_backend.stop()
     session = session_store.create()
-    await music_backend.start()
+    try:
+        await music_backend.start()
+    except Exception as e:
+        logger.error("music_backend.start() failed: %s\n%s", e, traceback.format_exc())
+        raise HTTPException(status_code=502, detail=f"Music backend failed: {e}")
     return session
 
 

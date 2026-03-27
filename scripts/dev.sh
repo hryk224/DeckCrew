@@ -89,7 +89,12 @@ cmd_start() {
   else
     echo "Starting backend on port $BE_PORT..."
     cd "$ROOT_DIR/backend"
-    setsid uv run uvicorn deckcrew.main:app --reload --port "$BE_PORT" \
+    local env_file="$ROOT_DIR/.env"
+    local env_flag=""
+    if [ -f "$env_file" ]; then
+      env_flag="--env-file $env_file"
+    fi
+    setsid uv run uvicorn deckcrew.main:app --reload --port "$BE_PORT" $env_flag \
       > "$PID_DIR/backend.log" 2>&1 &
     local be_pid=$!
     echo "$be_pid" > "$BE_PID_FILE"

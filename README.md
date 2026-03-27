@@ -41,7 +41,7 @@ npm run dev
 
 # Terminal 2: Backend (http://localhost:8000)
 cd backend
-uv run uvicorn deckcrew.main:app --reload --port 8000
+uv run uvicorn deckcrew.main:app --reload --port 8000 --env-file ../.env
 ```
 
 Stop dev servers (WSL2: `Ctrl+C` may leave child processes):
@@ -90,13 +90,14 @@ curl http://localhost:8000/health
 
 Defined in `.env.example`. Copy to `.env` before starting.
 
-| Variable              | Default                 | Description                                                            |
-| --------------------- | ----------------------- | ---------------------------------------------------------------------- |
-| `MUSIC_BACKEND`       | `mock`                  | `mock` for local dev, `lyria` for Lyria Realtime API                   |
-| `GOOGLE_API_KEY`      | (empty)                 | Google API key for Lyria and Gemini LLM. `LYRIA_API_KEY` also accepted |
-| `LLM_MODEL`           | (empty)                 | LLM model identifier for agent calls                                   |
-| `BACKEND_PORT`        | `8000`                  | Backend server port                                                    |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL used by frontend                                  |
+| Variable              | Default                     | Description                                          |
+| --------------------- | --------------------------- | ---------------------------------------------------- |
+| `MUSIC_BACKEND`       | `mock`                      | `mock` for local dev, `lyria` for Lyria Realtime API |
+| `GOOGLE_API_KEY`      | (empty)                     | Google API key (shared by Lyria and Gemini LLM)      |
+| `LYRIA_MODEL`         | `models/lyria-realtime-exp` | Music generation model                               |
+| `LLM_MODEL`           | (empty)                     | Agent LLM model (e.g. `gemini-2.0-flash`)            |
+| `BACKEND_PORT`        | `8000`                      | Backend server port                                  |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`     | Backend API base URL used by frontend                |
 
 ## Configuration Files
 
