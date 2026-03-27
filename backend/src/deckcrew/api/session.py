@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from deckcrew.music.registry import music_backend
 from deckcrew.state.models import SessionState
 from deckcrew.state.store import session_store
 
@@ -15,8 +16,10 @@ class UserRequest(BaseModel):
 
 @router.post("", response_model=SessionState)
 async def create_session() -> SessionState:
-    """Create a new session and start it."""
-    return session_store.create()
+    """Create a new session and start music playback."""
+    session = session_store.create()
+    await music_backend.start()
+    return session
 
 
 @router.get("", response_model=SessionState)
@@ -43,5 +46,8 @@ async def submit_request(body: UserRequest) -> SessionState:
 
 @router.post("/reset", response_model=SessionState)
 async def reset_session() -> SessionState:
-    """Reset the session to initial state."""
-    return session_store.reset()
+    """Reset the session: stop music, restart with fresh state."""
+    await music_backend.stop()
+    session = session_store.reset()
+    await music_backend.start()
+    return session

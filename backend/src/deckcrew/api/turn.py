@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from deckcrew.agent.registry import create_agents
 from deckcrew.api.event_bus import event_bus
+from deckcrew.music.registry import music_backend
 from deckcrew.orchestrator.conductor import Conductor
 from deckcrew.orchestrator.models import TurnResult
 from deckcrew.state.store import session_store
@@ -22,5 +23,6 @@ async def execute_turn() -> TurnResult:
         agents=create_agents(),
         store=session_store,
         bus=event_bus,
+        music=music_backend,
     )
     return await conductor.run_turn(session)

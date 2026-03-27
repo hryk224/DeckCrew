@@ -9,6 +9,7 @@ from deckcrew.api.events import (
     EVENT_STATE,
     SSEEvent,
 )
+from deckcrew.music.base import MusicBackend
 from deckcrew.orchestrator.models import Decision, TurnResult
 from deckcrew.state.models import MusicParams, SessionState
 from deckcrew.state.store import SessionStore
@@ -42,10 +43,12 @@ class Conductor:
         agents: list[DJAgent],
         store: SessionStore,
         bus: EventBus,
+        music: MusicBackend,
     ) -> None:
         self._agents = agents
         self._store = store
         self._bus = bus
+        self._music = music
 
     async def run_turn(self, session: SessionState) -> TurnResult:
         """Execute one turn: collect, decide, update, broadcast."""
@@ -100,7 +103,10 @@ class Conductor:
         )
         self._store.update(updated)
 
-        # 7. Publish updated state via SSE
+        # 7. Apply decision to music backend
+        await self._music.apply(updated.current_params)
+
+        # 8. Publish updated state via SSE
         await self._bus.publish(
             SSEEvent(event=EVENT_STATE, data=updated.model_dump())
         )
