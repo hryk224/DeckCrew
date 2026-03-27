@@ -3,11 +3,45 @@
 import { useState } from "react";
 import { startSession, submitRequest, runTurn } from "@/lib/api";
 import { useSessionStream } from "@/lib/useSessionStream";
+import type {
+  AudienceFeedbackContent,
+  CriticFeedbackContent,
+  FeedbackItem,
+} from "@/types/session";
 
 type LoadingState = null | "starting" | "sending" | "turning";
 
+function extractCritic(
+  items: FeedbackItem[],
+): (FeedbackItem & { source: "critic" }) | null {
+  const found = items.find((i) => i.source === "critic");
+  return found ? (found as FeedbackItem & { source: "critic" }) : null;
+}
+
+function extractAudiences(
+  items: FeedbackItem[],
+): (FeedbackItem & { source: "audience" })[] {
+  return items.filter(
+    (i): i is FeedbackItem & { source: "audience" } => i.source === "audience",
+  );
+}
+
+function severityClass(severity: string): string {
+  if (severity === "high") return "severity-badge severity-high";
+  if (severity === "medium") return "severity-badge severity-medium";
+  return "severity-badge severity-low";
+}
+
+function energyLabel(delta: number): string {
+  if (delta > 0.2) return "Wants much more energy";
+  if (delta > 0) return "Wants more energy";
+  if (delta < -0.2) return "Wants much less energy";
+  if (delta < 0) return "Wants less energy";
+  return "Satisfied";
+}
+
 export default function Home() {
-  const { session, proposals, decision, connected, reset } =
+  const { session, proposals, feedback, decision, connected, reset } =
     useSessionStream();
   const [requestText, setRequestText] = useState("");
   const [loading, setLoading] = useState<LoadingState>(null);
@@ -16,6 +50,9 @@ export default function Home() {
   const isRunning = session !== null && session.status === "running";
   const isBusy = loading !== null;
 
+  const critic = extractCritic(feedback);
+  const audiences = extractAudiences(feedback);
+
   async function handleStartSession() {
     setLoading("starting");
     setError(null);
@@ -23,7 +60,9 @@ export default function Home() {
       reset();
       await startSession();
     } catch (e) {
-      setError(`Failed to start session: ${e instanceof Error ? e.message : String(e)}`);
+      setError(
+        `Failed to start session: ${e instanceof Error ? e.message : String(e)}`,
+      );
     } finally {
       setLoading(null);
     }
@@ -35,7 +74,9 @@ export default function Home() {
     try {
       await runTurn();
     } catch (e) {
-      setError(`Failed to run turn: ${e instanceof Error ? e.message : String(e)}`);
+      setError(
+        `Failed to run turn: ${e instanceof Error ? e.message : String(e)}`,
+      );
     } finally {
       setLoading(null);
     }
@@ -51,7 +92,9 @@ export default function Home() {
       await submitRequest(text);
       setRequestText("");
     } catch (e) {
-      setError(`Failed to send request: ${e instanceof Error ? e.message : String(e)}`);
+      setError(
+        `Failed to send request: ${e instanceof Error ? e.message : String(e)}`,
+      );
       setLoading(null);
       return;
     }
@@ -60,7 +103,9 @@ export default function Home() {
     try {
       await runTurn();
     } catch (e) {
-      setError(`Request sent, but turn failed: ${e instanceof Error ? e.message : String(e)}`);
+      setError(
+        `Request sent, but turn failed: ${e instanceof Error ? e.message : String(e)}`,
+      );
     } finally {
       setLoading(null);
     }
@@ -184,6 +229,74 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Room Feedback */}
+      <section className="section">
+        <h2 className="section-label">Room Feedback</h2>
+        {feedback.length === 0 ? (
+          <p className="feedback-placeholder">
+            {session ? "Waiting for feedback..." : "Waiting for session..."}
+          </p>
+        ) : (
+          <div className="feedback-grid">
+            {/* Critic */}
+            <div className="feedback-card" data-source="critic">
+              <div className="feedback-header">
+                <span className="feedback-source-label">Critic</span>
+                {critic && (
+                  <span
+                    className={severityClass(
+                      (critic.content as CriticFeedbackContent).severity,
+                    )}
+                  >
+                    {(critic.content as CriticFeedbackContent).severity}
+                  </span>
+                )}
+              </div>
+              {critic ? (
+                <>
+                  <p className="feedback-main">
+                    {(critic.content as CriticFeedbackContent).issue}
+                  </p>
+                  <p className="feedback-detail">
+                    {(critic.content as CriticFeedbackContent).suggestion}
+                  </p>
+                </>
+              ) : (
+                <p className="feedback-main">No critique available</p>
+              )}
+            </div>
+
+            {/* Audience (list, supports future multi-audience) */}
+            <div className="feedback-audience-list">
+              {audiences.map((a) => (
+                <div
+                  key={a.name}
+                  className="feedback-card"
+                  data-source="audience"
+                >
+                  <div className="feedback-header">
+                    <span className="feedback-source-label">
+                      {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
+                    </span>
+                    <span className="feedback-energy-label">
+                      {energyLabel(
+                        (a.content as AudienceFeedbackContent).energy_delta,
+                      )}
+                    </span>
+                  </div>
+                  <p className="feedback-main">
+                    {(a.content as AudienceFeedbackContent).reaction}
+                  </p>
+                  <p className="feedback-detail">
+                    {(a.content as AudienceFeedbackContent).reason}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Decision */}

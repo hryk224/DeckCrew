@@ -28,6 +28,10 @@
   --color-crowd: #7dcfff;
   --color-decision: #9ece6a;
 
+  /* Feedback accent colors */
+  --color-critic: #f7768e;
+  --color-audience: #e0af68;
+
   /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -244,6 +248,110 @@ body {
   color: var(--text-secondary);
   font-style: italic;
   margin-top: var(--space-xs);
+}
+
+/* === Room Feedback === */
+.feedback-placeholder {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.feedback-audience-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.feedback-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: var(--space-md);
+  border-left: 3px solid var(--border-default);
+}
+
+.feedback-card[data-source="critic"] {
+  border-left-color: var(--color-critic);
+}
+
+.feedback-card[data-source="audience"] {
+  border-left-color: var(--color-audience);
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.feedback-source-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.feedback-card[data-source="critic"] .feedback-source-label {
+  color: var(--color-critic);
+}
+
+.feedback-card[data-source="audience"] .feedback-source-label {
+  color: var(--color-audience);
+}
+
+.severity-badge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.severity-low {
+  color: var(--text-secondary);
+}
+
+.severity-medium {
+  color: var(--color-audience);
+  background-color: rgba(224, 175, 104, 0.12);
+}
+
+.severity-high {
+  color: var(--color-critic);
+  background-color: rgba(247, 118, 142, 0.15);
+  font-weight: 600;
+}
+
+.feedback-energy-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-audience);
+}
+
+.feedback-main {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.feedback-detail {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .feedback-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* === Decision === */

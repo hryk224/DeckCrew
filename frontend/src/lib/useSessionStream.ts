@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Decision, Proposal, SessionState } from "@/types/session";
+import type {
+  Decision,
+  Feedback,
+  FeedbackItem,
+  Proposal,
+  SessionState,
+} from "@/types/session";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -18,6 +24,7 @@ function sortProposals(proposals: Proposal[]): Proposal[] {
 export interface SessionStreamState {
   session: SessionState | null;
   proposals: Proposal[];
+  feedback: FeedbackItem[];
   decision: Decision | null;
   connected: boolean;
   reset: () => void;
@@ -26,6 +33,7 @@ export interface SessionStreamState {
 export function useSessionStream(): SessionStreamState {
   const [session, setSession] = useState<SessionState | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [decision, setDecision] = useState<Decision | null>(null);
   const [connected, setConnected] = useState(false);
   const esRef = useRef<EventSource | null>(null);
@@ -57,6 +65,11 @@ export function useSessionStream(): SessionStreamState {
       setProposals(sortProposals(data.proposals));
     });
 
+    es.addEventListener("session.feedback", (e: MessageEvent) => {
+      const data = JSON.parse(e.data) as Feedback;
+      setFeedback(data.items);
+    });
+
     es.addEventListener("session.decision", (e: MessageEvent) => {
       const data = JSON.parse(e.data) as Decision;
       setDecision(data);
@@ -77,8 +90,9 @@ export function useSessionStream(): SessionStreamState {
   const reset = useCallback(() => {
     setSession(null);
     setProposals([]);
+    setFeedback([]);
     setDecision(null);
   }, []);
 
-  return { session, proposals, decision, connected, reset };
+  return { session, proposals, feedback, decision, connected, reset };
 }
