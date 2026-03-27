@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from deckcrew.state.models import MusicParams
@@ -18,3 +20,24 @@ class Proposal(BaseModel):
     summary: str
     perspective: str
     suggested_params: MusicParams
+
+
+# --- Critic agent schemas ---
+
+Severity = Literal["low", "medium", "high"]
+
+
+class CriticInput(BaseModel):
+    """Input passed to the Critic agent for evaluation."""
+
+    current_params: MusicParams
+    last_change: str | None = None
+    turn_count: int = 0
+
+
+class Critique(BaseModel):
+    """Critic agent's evaluation of the current session flow."""
+
+    issue: str
+    severity: Severity
+    suggestion: str
