@@ -358,17 +358,101 @@ body {
 .decision-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-md);
 }
 
-.decision-adopted {
+.decision-adopted-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.decision-adopted-agent {
   font-family: var(--font-mono);
+  font-weight: 600;
   color: var(--color-decision);
+}
+
+.decision-adopted-agent[data-agent="groove"] {
+  color: var(--color-groove);
+}
+
+.decision-adopted-agent[data-agent="harmony"] {
+  color: var(--color-harmony);
+}
+
+.decision-adopted-agent[data-agent="crowd"] {
+  color: var(--color-crowd);
 }
 
 .decision-reason {
   font-size: var(--text-sm);
   color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.decision-applied {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.decision-rejections {
+  border-top: 1px solid var(--border-default);
+  padding-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.decision-rejections-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.decision-rejection-item {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 2px solid var(--border-default);
+}
+
+.decision-rejection-item[data-agent="groove"] {
+  border-left-color: var(--color-groove);
+}
+
+.decision-rejection-item[data-agent="harmony"] {
+  border-left-color: var(--color-harmony);
+}
+
+.decision-rejection-item[data-agent="crowd"] {
+  border-left-color: var(--color-crowd);
+}
+
+.rejection-agent {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.rejection-summary {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.rejection-reason {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.4;
 }
 
 /* === Request === */

@@ -305,12 +305,40 @@ export default function Home() {
         <div className="decision-content">
           {decision ? (
             <>
-              <p className="decision-adopted">Adopted: {decision.adopted}</p>
-              <p className="decision-reason">{decision.reason}</p>
+              <div className="decision-adopted-block">
+                <p className="decision-adopted-agent" data-agent={decision.adopted}>
+                  Adopted: {decision.adopted.charAt(0).toUpperCase() + decision.adopted.slice(1)}
+                </p>
+                <p className="decision-reason">{decision.reason}</p>
+                <p className="decision-applied">
+                  bpm={decision.applied_params.bpm}{" "}
+                  energy={(decision.applied_params.energy * 100).toFixed(0)}%{" "}
+                  focus={decision.applied_params.focus}
+                </p>
+              </div>
+
+              {decision.rejections && decision.rejections.length > 0 && (
+                <div className="decision-rejections">
+                  <p className="decision-rejections-label">Rejected</p>
+                  {decision.rejections.map((r) => (
+                    <div
+                      key={r.agent_name}
+                      className="decision-rejection-item"
+                      data-agent={r.agent_name}
+                    >
+                      <p className="rejection-agent">
+                        {r.agent_name.charAt(0).toUpperCase() + r.agent_name.slice(1)}
+                      </p>
+                      <p className="rejection-summary">{r.summary}</p>
+                      <p className="rejection-reason">{r.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <>
-              <p className="decision-adopted">No decision yet</p>
+              <p className="decision-adopted-agent">No decision yet</p>
               <p className="decision-reason">
                 {session ? "Waiting for turn..." : "Session has not started"}
               </p>
