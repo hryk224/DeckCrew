@@ -22,12 +22,23 @@ from deckcrew.api.events import (
 )
 from deckcrew.music.base import MusicBackend
 from deckcrew.orchestrator.models import Decision, RejectionDetail, TurnResult
-from deckcrew.state.models import MusicParams, SessionState
+from deckcrew.state.models import (
+    MAX_RECENT_CHANGES,
+    ChangeKind,
+    ChangeRecord,
+    MusicParams,
+    SessionState,
+    SectionState,
+)
 from deckcrew.state.store import SessionStore
 
 # Bonus applied to change score when feedback indicates stagnation
 _CRITIC_ENERGY_BONUS = 0.15
 _AUDIENCE_ENERGY_BONUS = 0.1
+
+# Minor turn constraints
+_MINOR_MAX_BPM_DELTA = 4
+_MINOR_MAX_ENERGY_DELTA = 0.1
 
 
 def _compute_change_score(current: MusicParams, proposed: MusicParams) -> float:
@@ -75,12 +86,74 @@ def _apply_feedback_bonus(
     return score, notes
 
 
+def _clamp_minor(
+    current: MusicParams, adopted: MusicParams
+) -> tuple[MusicParams, list[str]]:
+    """Clamp adopted params to minor change limits.
+
+    Returns the clamped params and a list of what was suppressed.
+    Minor turns do not change mood.
+    """
+    suppressions: list[str] = []
+
+    # Mood: locked to current
+    mood = current.mood
+    if adopted.mood != current.mood:
+        suppressions.append(f"mood change suppressed ({adopted.mood})")
+
+    # BPM: clamp delta
+    bpm_delta = adopted.bpm - current.bpm
+    if abs(bpm_delta) > _MINOR_MAX_BPM_DELTA:
+        clamped_bpm = current.bpm + (
+            _MINOR_MAX_BPM_DELTA if bpm_delta > 0 else -_MINOR_MAX_BPM_DELTA
+        )
+        suppressions.append(
+            f"bpm clamped ({adopted.bpm} -> {clamped_bpm})"
+        )
+    else:
+        clamped_bpm = adopted.bpm
+
+    # Energy: clamp delta
+    energy_delta = adopted.energy - current.energy
+    if abs(energy_delta) > _MINOR_MAX_ENERGY_DELTA:
+        clamped_energy = round(
+            current.energy
+            + (_MINOR_MAX_ENERGY_DELTA if energy_delta > 0 else -_MINOR_MAX_ENERGY_DELTA),
+            2,
+        )
+        suppressions.append(
+            f"energy clamped ({adopted.energy:.2f} -> {clamped_energy:.2f})"
+        )
+    else:
+        clamped_energy = adopted.energy
+
+    clamped = MusicParams(
+        mood=mood,
+        bpm=max(60, min(200, clamped_bpm)),
+        energy=max(0.0, min(1.0, clamped_energy)),
+        texture=adopted.texture,
+        focus=adopted.focus,
+    )
+    return clamped, suppressions
+
+
+def _infer_minor_intent(
+    current_energy: float, new_energy: float
+) -> str:
+    """Infer transition_intent from energy change direction in a minor turn."""
+    if new_energy > current_energy:
+        return "lift"
+    if new_energy < current_energy:
+        return "cool_down"
+    return "hold"
+
+
 class Conductor:
     """Orchestrates a single turn of the DJ meeting.
 
     Collects proposals and feedback, selects one proposal based on
     adoption rules (with feedback influence), updates session state,
-    and publishes SSE events.
+    and publishes SSE events. Supports minor and major turn kinds.
     """
 
     def __init__(
@@ -99,8 +172,14 @@ class Conductor:
         self._bus = bus
         self._music = music
 
-    async def run_turn(self, session: SessionState) -> TurnResult:
-        """Execute one turn: collect, decide, update, broadcast."""
+    async def run_turn(
+        self, session: SessionState, kind: ChangeKind = "major"
+    ) -> TurnResult:
+        """Execute one turn: collect, decide, update, broadcast.
+
+        kind="minor" clamps parameter changes and preserves section.
+        kind="major" allows full changes (default, M1/M2 behavior).
+        """
         # 1. Build inputs
         agent_input = AgentInput(
             current_params=session.current_params,
@@ -155,50 +234,114 @@ class Conductor:
         )
 
         # 7. Select the adopted proposal
-        decision = self._select(
-            session, proposals, critique, reactions
-        )
+        decision = self._select(session, proposals, critique, reactions)
 
-        # 8. SSE: decision
+        # 8. Apply minor clamping if needed
+        applied_params = decision.applied_params
+        suppressions: list[str] = []
+        if kind == "minor":
+            applied_params, suppressions = _clamp_minor(
+                session.current_params, decision.applied_params
+            )
+            decision = Decision(
+                adopted_proposal=decision.adopted_proposal,
+                reason=decision.reason,
+                applied_params=applied_params,
+                rejections=decision.rejections,
+            )
+
+        # 9. Build change summary
+        change_summary = (
+            f"{decision.adopted_proposal.agent_name}: "
+            f"{decision.adopted_proposal.summary}"
+        )
+        if suppressions:
+            change_summary += f" [minor: {', '.join(suppressions)}]"
+
+        # 10. SSE: decision
         await self._bus.publish(
             SSEEvent(
                 event=EVENT_DECISION,
                 data={
                     "adopted": decision.adopted_proposal.agent_name,
                     "reason": decision.reason,
-                    "applied_params": decision.applied_params.model_dump(),
+                    "applied_params": applied_params.model_dump(),
                     "rejections": [r.model_dump() for r in decision.rejections],
                 },
             )
         )
 
-        # 9. Update session state
+        # 11. Update section state
+        new_section = self._update_section(
+            session, kind, change_summary, applied_params
+        )
+
+        # 12. Update session state
         updated = session.model_copy(
             update={
-                "current_params": decision.applied_params,
-                "last_change": (
-                    f"{decision.adopted_proposal.agent_name}: "
-                    f"{decision.adopted_proposal.summary}"
-                ),
+                "current_params": applied_params,
+                "section": new_section,
+                "last_change": change_summary,
                 "turn_count": session.turn_count + 1,
                 "last_user_request": None,
             }
         )
         self._store.update(updated)
 
-        # 10. Apply to music backend
+        # 13. Apply to music backend
         await self._music.apply(updated.current_params)
 
-        # 11. SSE: state
+        # 14. SSE: state
         await self._bus.publish(
             SSEEvent(event=EVENT_STATE, data=updated.model_dump())
         )
 
         return TurnResult(
+            kind=kind,
             proposals=proposals,
             feedback=feedback_items,
             decision=decision,
             state=updated,
+        )
+
+    def _update_section(
+        self,
+        session: SessionState,
+        kind: ChangeKind,
+        summary: str,
+        applied_params: MusicParams,
+    ) -> SectionState:
+        """Update section state based on turn kind."""
+        section = session.section
+
+        # Add change record (cap at MAX_RECENT_CHANGES)
+        record = ChangeRecord(
+            turn=session.turn_count + 1,
+            kind=kind,
+            summary=summary,
+        )
+        recent = list(section.recent_changes) + [record]
+        if len(recent) > MAX_RECENT_CHANGES:
+            recent = recent[-MAX_RECENT_CHANGES:]
+
+        if kind == "minor":
+            # Minor: preserve section, adjust intent based on energy direction
+            new_intent = _infer_minor_intent(
+                session.current_params.energy, applied_params.energy
+            )
+            return SectionState(
+                current_section=section.current_section,
+                transition_intent=new_intent,  # type: ignore[arg-type]
+                last_major_turn=section.last_major_turn,
+                recent_changes=recent,
+            )
+
+        # Major: update last_major_turn (section transition logic in M3-03)
+        return SectionState(
+            current_section=section.current_section,
+            transition_intent=section.transition_intent,
+            last_major_turn=session.turn_count + 1,
+            recent_changes=recent,
         )
 
     def _select(
@@ -231,7 +374,6 @@ class Conductor:
         )
         adopted = crowd
 
-        # Build reason with feedback context
         reason_parts = [
             f"User request present — adopting {adopted.agent_name}'s "
             f"proposal to reflect audience input"
@@ -278,7 +420,6 @@ class Conductor:
         scored.sort(key=lambda x: x[1], reverse=True)
         best, best_score, best_notes = scored[0]
 
-        # Build reason with feedback influence
         reason_parts = [
             f"Adopting {best.agent_name}'s proposal "
             f"(score: {best_score:.2f})"

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from deckcrew.agent.models import Proposal
 from deckcrew.api.events import FeedbackItem
-from deckcrew.state.models import MusicParams, SessionState
+from deckcrew.state.models import ChangeKind, MusicParams, SessionState
 
 
 class RejectionDetail(BaseModel):
@@ -25,6 +25,7 @@ class Decision(BaseModel):
 class TurnResult(BaseModel):
     """Complete result of a single turn execution."""
 
+    kind: ChangeKind
     proposals: list[Proposal]
     feedback: list[FeedbackItem]
     decision: Decision
