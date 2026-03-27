@@ -303,6 +303,7 @@ class Conductor:
             current_params=session.current_params,
             last_change=session.last_change,
             turn_count=session.turn_count,
+            venue=session.venue,
         )
 
         # 2. Collect proposals in parallel

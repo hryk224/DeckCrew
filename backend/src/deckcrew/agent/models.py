@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from deckcrew.state.models import MusicParams
+from deckcrew.venue.models import VenueContext
 
 
 class AgentInput(BaseModel):
@@ -52,6 +53,7 @@ class AudienceInput(BaseModel):
     current_params: MusicParams
     last_change: str | None = None
     turn_count: int = 0
+    venue: VenueContext | None = None
 
 
 class Reaction(BaseModel):
