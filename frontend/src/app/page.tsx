@@ -166,6 +166,29 @@ export default function Home() {
             <span className="turn-count">Turn {session.turn_count}</span>
           )}
         </h2>
+
+        {session?.section && (
+          <div className="section-bar">
+            <span
+              className="section-badge"
+              data-section={session.section.current_section}
+            >
+              {session.section.current_section.toUpperCase()}
+            </span>
+            <span className="section-intent">
+              → {session.section.transition_intent.replace("_", " ")}
+            </span>
+            {session.last_turn_kind && (
+              <span
+                className="turn-kind-badge"
+                data-kind={session.last_turn_kind}
+              >
+                {session.last_turn_kind}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="now-playing-params">
           <div className="param">
             <span className="param-key">Mood</span>
