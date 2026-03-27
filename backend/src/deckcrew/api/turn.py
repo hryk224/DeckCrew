@@ -1,0 +1,26 @@
+from fastapi import APIRouter, HTTPException
+
+from deckcrew.agent.registry import create_agents
+from deckcrew.api.event_bus import event_bus
+from deckcrew.orchestrator.conductor import Conductor
+from deckcrew.orchestrator.models import TurnResult
+from deckcrew.state.store import session_store
+
+router = APIRouter(tags=["turn"])
+
+
+@router.post("/session/turn", response_model=TurnResult)
+async def execute_turn() -> TurnResult:
+    """Execute a single turn of the DJ meeting."""
+    session = session_store.get_active()
+    if session is None:
+        raise HTTPException(status_code=404, detail="No active session")
+    if session.status != "running":
+        raise HTTPException(status_code=400, detail="Session is not running")
+
+    conductor = Conductor(
+        agents=create_agents(),
+        store=session_store,
+        bus=event_bus,
+    )
+    return await conductor.run_turn(session)
