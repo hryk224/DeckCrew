@@ -90,13 +90,13 @@ curl http://localhost:8000/health
 
 Defined in `.env.example`. Copy to `.env` before starting.
 
-| Variable              | Default                 | Description                                          |
-| --------------------- | ----------------------- | ---------------------------------------------------- |
-| `MUSIC_BACKEND`       | `mock`                  | `mock` for local dev, `lyria` for Lyria Realtime API |
-| `LYRIA_API_KEY`       | (empty)                 | Required only when `MUSIC_BACKEND=lyria`             |
-| `LLM_MODEL`           | (empty)                 | LLM model identifier for agent calls                 |
-| `BACKEND_PORT`        | `8000`                  | Backend server port                                  |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL used by frontend                |
+| Variable              | Default                 | Description                                                            |
+| --------------------- | ----------------------- | ---------------------------------------------------------------------- |
+| `MUSIC_BACKEND`       | `mock`                  | `mock` for local dev, `lyria` for Lyria Realtime API                   |
+| `GOOGLE_API_KEY`      | (empty)                 | Google API key for Lyria and Gemini LLM. `LYRIA_API_KEY` also accepted |
+| `LLM_MODEL`           | (empty)                 | LLM model identifier for agent calls                                   |
+| `BACKEND_PORT`        | `8000`                  | Backend server port                                                    |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL used by frontend                                  |
 
 ## Configuration Files
 

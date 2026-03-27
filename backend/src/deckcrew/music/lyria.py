@@ -20,13 +20,14 @@ _MODEL = "models/lyria-realtime-exp"
 class LyriaMusicBackend:
     """Live connection to Lyria Realtime API.
 
-    Requires LYRIA_API_KEY to be passed at construction time.
+    Requires GOOGLE_API_KEY (or LYRIA_API_KEY for backward compat).
     """
 
     def __init__(self, api_key: str) -> None:
         if not api_key:
             raise ValueError(
-                "MUSIC_BACKEND=lyria requires LYRIA_API_KEY to be set. "
+                "MUSIC_BACKEND=lyria requires GOOGLE_API_KEY to be set. "
+                "LYRIA_API_KEY is also accepted for backward compatibility. "
                 "Set the environment variable or switch to MUSIC_BACKEND=mock."
             )
         self._client = genai.Client(api_key=api_key)

@@ -90,13 +90,13 @@ curl http://localhost:8000/health
 
 `.env.example` で定義。開発開始前に `.env` へコピーすること。
 
-| 変数名                | デフォルト              | 説明                                                       |
-| --------------------- | ----------------------- | ---------------------------------------------------------- |
-| `MUSIC_BACKEND`       | `mock`                  | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
-| `LYRIA_API_KEY`       | (空)                    | `MUSIC_BACKEND=lyria` の場合のみ必須                       |
-| `LLM_MODEL`           | (空)                    | エージェント呼び出しに使用する LLM モデル識別子            |
-| `BACKEND_PORT`        | `8000`                  | バックエンドサーバーのポート番号                           |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | フロントエンドが参照するバックエンド API の URL            |
+| 変数名                | デフォルト              | 説明                                                                         |
+| --------------------- | ----------------------- | ---------------------------------------------------------------------------- |
+| `MUSIC_BACKEND`       | `mock`                  | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時                   |
+| `GOOGLE_API_KEY`      | (空)                    | Google API キー（Lyria / Gemini LLM 共通）。`LYRIA_API_KEY` も後方互換で有効 |
+| `LLM_MODEL`           | (空)                    | エージェント呼び出しに使用する LLM モデル識別子                              |
+| `BACKEND_PORT`        | `8000`                  | バックエンドサーバーのポート番号                                             |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | フロントエンドが参照するバックエンド API の URL                              |
 
 ## 設定ファイル
 
