@@ -390,11 +390,6 @@ function HomeContent() {
           </div>
         ) : (
           <div className="header-controls">
-            <span
-              className={`connection-status ${connected ? "connected" : ""}`}
-            >
-              {connected ? "Connected" : "Disconnected"}
-            </span>
             {!isRunning ? (
               <button
                 className="header-button play-button"
@@ -426,6 +421,10 @@ function HomeContent() {
                 </button>
               </>
             )}
+            <span
+              className={`connection-dot ${connected ? "connected" : ""}`}
+              title={connected ? "Connected" : "Disconnected"}
+            />
           </div>
         )}
         {error && <p className="error-message">{error}</p>}

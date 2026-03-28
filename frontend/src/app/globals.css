@@ -378,11 +378,6 @@ body::before {
   margin-top: var(--space-sm);
 }
 
-.connection-status {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
 
 /* === Preview Banner === */
 .preview-banner {
@@ -510,9 +505,6 @@ body::before {
   background-color: rgba(122, 162, 247, 0.15);
 }
 
-.connection-status.connected {
-  color: var(--color-decision);
-}
 
 .header-button {
   background-color: var(--bg-elevated);
@@ -532,6 +524,22 @@ body::before {
 .header-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Connection LED dot */
+.connection-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-critic);
+  opacity: 0.6;
+  margin-left: auto;
+}
+
+.connection-dot.connected {
+  background-color: var(--color-decision);
+  opacity: 0.8;
 }
 
 .play-button {
