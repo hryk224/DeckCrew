@@ -32,6 +32,7 @@ LOW_ENERGY_DELTA = 0.05
 # --- Deliberation ---
 MAX_DELIBERATION_ROUNDS = int(os.environ.get("MAX_DELIBERATION_ROUNDS", "2"))
 DEFAULT_DIALOGUE_MODE = os.environ.get("DIALOGUE_MODE", "structured")
+MAX_MESSAGES_PER_TURN = int(os.environ.get("MAX_MESSAGES_PER_TURN", "20"))
 
 
 def get_all_config() -> dict[str, float | int]:
@@ -51,4 +52,5 @@ def get_all_config() -> dict[str, float | int]:
         "energy_stagnation_penalty": ENERGY_STAGNATION_PENALTY,
         "low_energy_delta": LOW_ENERGY_DELTA,
         "max_deliberation_rounds": MAX_DELIBERATION_ROUNDS,
+        "max_messages_per_turn": MAX_MESSAGES_PER_TURN,
     }

@@ -6,11 +6,7 @@ from deckcrew.state.models import ChangeKind, MusicParams, SessionState
 
 
 class RoundInfo(BaseModel):
-    """Round metadata within a single turn.
-
-    round=1, total_rounds=1 for current 1-shot behavior.
-    M6-04 will increase total_rounds for multi-round deliberation.
-    """
+    """Round metadata within a single turn."""
 
     round: int
     total_rounds: int
@@ -33,12 +29,26 @@ class Decision(BaseModel):
     rejections: list[RejectionDetail]
 
 
+class DialogueMetadata(BaseModel):
+    """Metadata about the dialogue process within a turn.
+
+    Only populated for semi_free mode. None for structured.
+    """
+
+    mode: str
+    total_messages: int
+    rounds_executed: int
+    early_stop: bool
+    speaker_orders: list[list[str]]
+
+
 class TurnResult(BaseModel):
     """Complete result of a single turn execution."""
 
     kind: ChangeKind
     round_info: RoundInfo
     speaker_order: list[str] | None = None
+    dialogue: DialogueMetadata | None = None
     proposals: list[Proposal]
     feedback: list[FeedbackItem]
     decision: Decision

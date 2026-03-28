@@ -26,7 +26,7 @@ from deckcrew.memory.models import InterventionRecord, PreferenceProfile
 from deckcrew.memory.preference import apply_preference_bonus
 from deckcrew.music.base import MusicBackend
 from deckcrew.orchestrator.meeting import DialogueMode, MeetingContext
-from deckcrew.orchestrator.models import Decision, RejectionDetail, RoundInfo, TurnResult
+from deckcrew.orchestrator.models import Decision, DialogueMetadata, RejectionDetail, RoundInfo, TurnResult
 from deckcrew.orchestrator.repetition import detect_repetition
 from datetime import UTC, datetime
 
@@ -48,6 +48,7 @@ from deckcrew.orchestrator.config import (
     AUDIENCE_DIR_THRESHOLD,
     AUDIENCE_ENERGY_BONUS,
     CRITIC_ENERGY_BONUS,
+    MAX_MESSAGES_PER_TURN,
     MINOR_MAX_BPM_DELTA,
     MINOR_MAX_ENERGY_DELTA,
     PEAK_SUSTAIN_TURNS,
@@ -374,10 +375,24 @@ class Conductor:
         reactions: list[Reaction] = []
         feedback_items: list[FeedbackItem] = []
         last_speaker_order: list[str] | None = None
+        all_speaker_orders: list[list[str]] = []
+        prev_agent_summaries: dict[str, str] = {}
+        early_stop = False
+        rounds_executed = 0
 
         for round_num in range(1, max_rounds + 1):
+            # Safety: stop if message count exceeds limit
+            if len(context.messages) >= MAX_MESSAGES_PER_TURN:
+                logger.warning(
+                    "[deliberation] message limit reached (%d), stopping early",
+                    MAX_MESSAGES_PER_TURN,
+                )
+                early_stop = True
+                break
+
             context.current_round = round_num
             round_info = RoundInfo(round=round_num, total_rounds=max_rounds)
+            rounds_executed = round_num
 
             # 1. DJ proposals
             if dialogue_mode == "semi_free":
@@ -459,15 +474,32 @@ class Conductor:
                 )
             )
 
+            # Track speaker order for this round
+            if last_speaker_order:
+                all_speaker_orders.append(last_speaker_order)
+
+            # Repetition detection: exact agent→summary match with previous round
+            current_agent_summaries = {p.agent_name: p.summary for p in proposals}
+            if round_num > 1 and current_agent_summaries == prev_agent_summaries:
+                early_stop = True
+                logger.info(
+                    "[deliberation] round=%d early_stop=true (identical per-agent summaries)",
+                    round_num,
+                )
+                break
+
+            prev_agent_summaries = current_agent_summaries
+
             logger.info(
-                "[deliberation] round=%d/%d proposals=%s",
+                "[deliberation] round=%d/%d proposals=%s order=%s",
                 round_num, max_rounds,
                 [p.agent_name for p in proposals],
+                last_speaker_order or "parallel",
             )
 
         # --- Post-deliberation: Decision and state update (once) ---
         assert critique is not None
-        final_round_info = RoundInfo(round=max_rounds, total_rounds=max_rounds)
+        final_round_info = RoundInfo(round=rounds_executed, total_rounds=max_rounds)
 
         # 5. Select the adopted proposal
         decision = self._select(session, proposals, critique, reactions, profile)
@@ -566,16 +598,30 @@ class Conductor:
             if prev_section != new_section_name
             else f"{prev_section}→{new_section_name} (hold)"
         )
+        # Build dialogue metadata for semi_free
+        dialogue_meta: DialogueMetadata | None = None
+        if dialogue_mode == "semi_free":
+            dialogue_meta = DialogueMetadata(
+                mode=dialogue_mode,
+                total_messages=len(context.messages),
+                rounds_executed=rounds_executed,
+                early_stop=early_stop,
+                speaker_orders=all_speaker_orders,
+            )
+
         logger.info(
-            "[turn] kind=%s turn=%d rounds=%d section=%s adopted=%s",
-            kind, updated.turn_count, max_rounds,
-            transition_str, decision.adopted_proposal.agent_name,
+            "[turn] kind=%s turn=%d rounds=%d/%d mode=%s section=%s adopted=%s early_stop=%s messages=%d",
+            kind, updated.turn_count, rounds_executed, max_rounds,
+            dialogue_mode, transition_str,
+            decision.adopted_proposal.agent_name,
+            early_stop, len(context.messages),
         )
 
         return TurnResult(
             kind=kind,
             round_info=final_round_info,
             speaker_order=last_speaker_order,
+            dialogue=dialogue_meta,
             proposals=proposals,
             feedback=feedback_items,
             decision=decision,

@@ -108,6 +108,14 @@ export interface RoundInfo {
   total_rounds: number;
 }
 
+export interface DialogueMetadata {
+  mode: string;
+  total_messages: number;
+  rounds_executed: number;
+  early_stop: boolean;
+  speaker_orders: string[][];
+}
+
 // --- Decision ---
 
 export interface Rejection {
