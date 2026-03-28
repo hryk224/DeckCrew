@@ -504,8 +504,10 @@ class Conductor:
         # 5. Select the adopted proposal
         decision = self._select(session, proposals, critique, reactions, profile)
 
-        # 6. Apply minor clamping if needed
-        applied_params = decision.applied_params
+        # 6. Inherit genre_group from session (agents don't propose it)
+        applied_params = decision.applied_params.model_copy(
+            update={"genre_group": session.current_params.genre_group},
+        )
         suppressions: list[str] = []
         if kind == "minor":
             applied_params, suppressions = _clamp_minor(

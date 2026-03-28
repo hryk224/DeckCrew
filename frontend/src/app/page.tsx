@@ -5,6 +5,7 @@ import {
   startSession,
   submitRequest,
   runTurn,
+  updateGenreGroup,
   fetchInterventions,
   fetchProfile,
   clearMemory,
@@ -32,6 +33,19 @@ const SECTION_SYMBOLS: Record<string, string> = {
 };
 
 const SECTION_ORDER = ["intro", "build", "peak", "release"] as const;
+
+const GENRE_GROUPS = [
+  { id: "house_party", label: "House Party" },
+  { id: "techno_night", label: "Techno Night" },
+  { id: "edm_festival", label: "EDM Festival" },
+  { id: "bass_music", label: "Bass Music" },
+  { id: "hiphop_rnb", label: "Hip Hop / R&B" },
+  { id: "latin_global", label: "Latin / Global" },
+  { id: "disco_funk", label: "Disco / Funk" },
+  { id: "rock_indie", label: "Rock / Indie" },
+  { id: "chill_lounge", label: "Chill / Lounge" },
+  { id: "open_format", label: "Open Format" },
+] as const;
 
 const AGENT_ICONS: Record<string, string> = {
   groove: "≋",
@@ -392,6 +406,12 @@ function HomeContent() {
           </div>
         )}
 
+        <GenreSelector
+          current={session?.current_params.genre_group ?? "house_party"}
+          disabled={!isRunning || !!previewState}
+          isPreview={!!previewState}
+        />
+
         <div className="now-playing-params">
           <div className="param">
             <span className="param-key">Mood</span>
@@ -563,6 +583,46 @@ function HomeContent() {
 
       {/* Memory (debug panel, hidden in preview mode) */}
       {!previewState && <MemoryPanel />}
+    </div>
+  );
+}
+
+function GenreSelector({
+  current,
+  disabled,
+  isPreview,
+}: {
+  current: string;
+  disabled: boolean;
+  isPreview: boolean;
+}) {
+  const [updating, setUpdating] = useState(false);
+
+  async function handleSelect(id: string) {
+    if (id === current || disabled || updating) return;
+    setUpdating(true);
+    try {
+      await updateGenreGroup(id);
+    } catch {
+      // SSE will reflect the actual state
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  return (
+    <div className={`genre-selector ${isPreview ? "preview-disabled" : ""}`}>
+      {GENRE_GROUPS.map((g) => (
+        <button
+          key={g.id}
+          type="button"
+          className={`genre-chip ${g.id === current ? "active" : ""}`}
+          disabled={disabled || updating}
+          onClick={() => handleSelect(g.id)}
+        >
+          {g.label}
+        </button>
+      ))}
     </div>
   );
 }

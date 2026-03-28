@@ -511,6 +511,47 @@ body::before {
   letter-spacing: 0.04em;
 }
 
+/* Genre selector */
+.genre-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: var(--space-md);
+}
+
+.genre-chip {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-primary);
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 2px 7px;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+}
+
+.genre-chip:hover:not(:disabled) {
+  border-color: var(--text-secondary);
+}
+
+.genre-chip.active {
+  color: var(--text-accent);
+  border-color: var(--text-accent);
+  background-color: rgba(var(--pixel-shadow-rgb), 0.1);
+}
+
+.genre-chip:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.genre-selector.preview-disabled .genre-chip {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .live-indicator {
   display: flex;
   align-items: center;

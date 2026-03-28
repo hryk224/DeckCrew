@@ -24,6 +24,18 @@ export async function runTurn(): Promise<void> {
   await post("/session/turn");
 }
 
+export async function updateGenreGroup(genreGroup: string): Promise<void> {
+  const res = await fetch(`${API_URL}/session/params`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ genre_group: genreGroup }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`${res.status}: ${detail}`);
+  }
+}
+
 // --- Memory API ---
 
 export interface MemoryIntervention {
