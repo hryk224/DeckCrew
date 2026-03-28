@@ -389,58 +389,58 @@ function HomeContent() {
             </div>
           </div>
         ) : (
-          <div className="header-controls">
-            {!isRunning ? (
-              <button
-                className="header-button play-button"
-                type="button"
-                disabled={!connected || isBusy}
-                onClick={handleStartSession}
-              >
-                {loading === "starting" ? "Starting..." : "▶ Play"}
-              </button>
-            ) : (
-              <>
+          <div className="control-bar">
+            <div className="control-bar-left">
+              {!isRunning ? (
                 <button
-                  className="header-button stop-button"
+                  className="header-button play-button"
                   type="button"
-                  disabled={isBusy}
-                  onClick={handleStopSession}
+                  disabled={!connected || isBusy}
+                  onClick={handleStartSession}
                 >
-                  {loading === "stopping" ? "Stopping..." : "■ Stop"}
+                  {loading === "starting" ? "Starting..." : "▶ Play"}
                 </button>
-                <button
-                  className="header-button"
-                  type="button"
-                  disabled={isBusy}
-                  onClick={handleRunTurn}
-                >
-                  {loading === "turning" && !requestText
-                    ? "Running..."
-                    : "Next Turn"}
-                </button>
-              </>
-            )}
-            <span
-              className={`connection-dot ${connected ? "connected" : ""}`}
-              title={connected ? "Connected" : "Disconnected"}
-            />
+              ) : (
+                <>
+                  <button
+                    className="header-button stop-button"
+                    type="button"
+                    disabled={isBusy}
+                    onClick={handleStopSession}
+                  >
+                    {loading === "stopping" ? "Stopping..." : "■ Stop"}
+                  </button>
+                  <button
+                    className="header-button"
+                    type="button"
+                    disabled={isBusy}
+                    onClick={handleRunTurn}
+                  >
+                    {loading === "turning" && !requestText
+                      ? "Running..."
+                      : "Next Turn"}
+                  </button>
+                </>
+              )}
+              <span className={`status-led ${!connected ? "offline" : isRunning ? "live" : "ready"}`}>
+                {!connected ? "Offline" : isRunning ? "Live" : "Ready"}
+              </span>
+            </div>
+            <div className="control-bar-right">
+              <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
+              <LocaleSelector
+                current={locale}
+                disabled={false}
+                isPreview={!isRunning}
+                onSelect={setLocale}
+              />
+            </div>
           </div>
         )}
         {error && <p className="error-message">{error}</p>}
         {loadingLabel && !error && (
           <p className="loading-message">{loadingLabel}</p>
         )}
-        <div className="header-selectors">
-          <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
-          <LocaleSelector
-            current={locale}
-            disabled={false}
-            isPreview={!!previewState || !isRunning}
-            onSelect={setLocale}
-          />
-
-        </div>
       </header>
 
       {/* Now Playing */}
@@ -474,12 +474,6 @@ function HomeContent() {
             <span className="section-intent">
               → {session.section.transition_intent.replace("_", " ")}
             </span>
-            {isRunning && (
-              <span className="live-indicator">
-                <span className="live-dot" />
-                Live
-              </span>
-            )}
           </div>
         )}
 
