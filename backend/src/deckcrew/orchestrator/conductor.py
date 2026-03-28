@@ -9,6 +9,8 @@ from deckcrew.agent.models import (
     Critique,
     Proposal,
     Reaction,
+    SpeakingIntent,
+    TurnVote,
 )
 from deckcrew.api.event_bus import EventBus
 from deckcrew.api.events import (
@@ -381,9 +383,12 @@ class Conductor:
         feedback_items: list[FeedbackItem] = []
         last_speaker_order: list[str] | None = None
         all_speaker_orders: list[list[str]] = []
+        all_intents: list[SpeakingIntent] = []
+        all_votes: list[TurnVote] = []
         prev_agent_summaries: dict[str, str] = {}
         early_stop = False
         rounds_executed = 0
+        vote_result: str | None = None
 
         for round_num in range(1, max_rounds + 1):
             # Safety: stop if message count exceeds limit
@@ -399,7 +404,26 @@ class Conductor:
             round_info = RoundInfo(round=round_num, total_rounds=max_rounds)
             rounds_executed = round_num
 
-            # 1. DJ proposals
+            # 0. Query speaking intents (M7.3-02)
+            intents = await asyncio.gather(
+                *(agent.should_speak(context, agent_input) for agent in self._agents)
+            )
+            all_intents = list(intents)
+            speakers = [i for i in intents if i.intent == "speak"]
+
+            # Safety: at least 1 agent must speak
+            if not speakers:
+                # Force the agent with highest energy distance to speak
+                energy = agent_input.current_params.energy
+                best = max(self._agents, key=lambda a: abs(0.5 - energy))
+                forced = SpeakingIntent(agent_name=best.name, intent="speak", reason="Forced (no volunteers)")
+                speakers = [forced]
+                all_intents = [forced if i.agent_name == best.name else i for i in all_intents]
+
+            speaking_names = {s.agent_name for s in speakers}
+            speaking_agents = [a for a in self._agents if a.name in speaking_names]
+
+            # 1. DJ proposals (only from agents who want to speak)
             if dialogue_mode == "semi_free":
                 proposals, last_speaker_order = await self._collect_semi_free(
                     round_num, agent_input, context, critique, reactions,
@@ -408,13 +432,13 @@ class Conductor:
             elif round_num == 1:
                 proposals = list(
                     await asyncio.gather(
-                        *(agent.propose(agent_input) for agent in self._agents)
+                        *(agent.propose(agent_input) for agent in speaking_agents)
                     )
                 )
             else:
                 proposals = list(
                     await asyncio.gather(
-                        *(agent.revise(agent_input, context) for agent in self._agents)
+                        *(agent.revise(agent_input, context) for agent in speaking_agents)
                     )
                 )
 
@@ -482,6 +506,8 @@ class Conductor:
             # Track speaker order for this round
             if last_speaker_order:
                 all_speaker_orders.append(last_speaker_order)
+            else:
+                all_speaker_orders.append([s.agent_name for s in speakers])
 
             # Repetition detection: exact agent→summary match with previous round
             current_agent_summaries = {p.agent_name: p.summary for p in proposals}
@@ -495,10 +521,38 @@ class Conductor:
 
             prev_agent_summaries = current_agent_summaries
 
+            # 5. Voting (M7.3-03) — DJ agents only, skip round 1 (safety: always continue)
+            if round_num >= 2:
+                votes = list(await asyncio.gather(
+                    *(agent.vote(context, agent_input) for agent in self._agents)
+                ))
+                all_votes = votes
+
+                # Tally votes
+                adopt_votes = [v for v in votes if v.vote == "adopt"]
+                stop_votes = [v for v in votes if v.vote == "stop"]
+                total = len(votes)
+
+                if len(adopt_votes) > total / 2:
+                    # Majority adopt — find the most adopted agent
+                    from collections import Counter
+                    adopt_counts = Counter(v.adopt_agent for v in adopt_votes if v.adopt_agent)
+                    if adopt_counts:
+                        winner = adopt_counts.most_common(1)[0]
+                        vote_result = f"adopt:{winner[0]} ({winner[1]}/{total})"
+                        early_stop = True
+                        logger.info("[deliberation] vote consensus: %s", vote_result)
+                        break
+                elif len(stop_votes) > total / 2:
+                    vote_result = f"stop ({len(stop_votes)}/{total})"
+                    early_stop = True
+                    logger.info("[deliberation] vote consensus: %s", vote_result)
+                    break
+
             logger.info(
-                "[deliberation] round=%d/%d proposals=%s order=%s",
+                "[deliberation] round=%d/%d speakers=%s order=%s",
                 round_num, max_rounds,
-                [p.agent_name for p in proposals],
+                [s.agent_name for s in speakers],
                 last_speaker_order or "parallel",
             )
 
@@ -534,15 +588,26 @@ class Conductor:
             change_summary += f" [minor: {', '.join(suppressions)}]"
 
         # 8. Build dialogue metadata (shared by SSE and TurnResult)
-        dialogue_meta: DialogueMetadata | None = None
-        if dialogue_mode == "semi_free":
-            dialogue_meta = DialogueMetadata(
-                mode=dialogue_mode,
-                total_messages=len(context.messages),
-                rounds_executed=rounds_executed,
-                early_stop=early_stop,
-                speaker_orders=all_speaker_orders,
-            )
+        from deckcrew.orchestrator.models import IntentSummary, VoteSummary
+        intent_summaries = [
+            IntentSummary(agent_name=i.agent_name, intent=i.intent, reason=i.reason)
+            for i in all_intents
+        ] if all_intents else None
+        vote_summaries = [
+            VoteSummary(agent_name=v.agent_name, vote=v.vote, adopt_agent=v.adopt_agent, reason=v.reason)
+            for v in all_votes
+        ] if all_votes else None
+
+        dialogue_meta = DialogueMetadata(
+            mode=dialogue_mode,
+            total_messages=len(context.messages),
+            rounds_executed=rounds_executed,
+            early_stop=early_stop,
+            speaker_orders=all_speaker_orders,
+            intents=intent_summaries,
+            votes=vote_summaries,
+            vote_result=vote_result,
+        )
 
         # 9. SSE: decision
         decision_data: dict[str, object] = {
@@ -554,8 +619,7 @@ class Conductor:
             "applied_params": applied_params.model_dump(),
             "rejections": [r.model_dump() for r in decision.rejections],
         }
-        if dialogue_meta is not None:
-            decision_data["dialogue"] = dialogue_meta.model_dump()
+        decision_data["dialogue"] = dialogue_meta.model_dump()
         await self._bus.publish(
             SSEEvent(event=EVENT_DECISION, data=decision_data)
         )

@@ -1,5 +1,12 @@
-from deckcrew.agent.models import AgentInput, Proposal
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from deckcrew.agent.models import AgentInput, Proposal, SpeakingIntent, TurnVote
 from deckcrew.state.models import MusicParams
+
+if TYPE_CHECKING:
+    from deckcrew.orchestrator.meeting import MeetingContext
 
 # Localized utterance text
 _TEXT: dict[str, dict[str, str]] = {
@@ -27,12 +34,54 @@ def _t(key: str, locale: str, **kwargs: str) -> str:
     return text.format(**kwargs) if kwargs else text
 
 
+def _mock_should_speak(
+    name: str, context: MeetingContext, agent_input: AgentInput
+) -> SpeakingIntent:
+    """Rule-based speaking intent for mock agents."""
+    # Round 1: always speak
+    if context.current_round <= 1:
+        return SpeakingIntent(agent_name=name, intent="speak", reason="First round")
+    # Speak if user request present
+    if agent_input.user_request:
+        return SpeakingIntent(agent_name=name, intent="speak", reason="User request present")
+    # Speak if energy gap is significant
+    energy = agent_input.current_params.energy
+    if energy < 0.3 or energy > 0.8:
+        return SpeakingIntent(agent_name=name, intent="speak", reason="Energy needs adjustment")
+    # Otherwise pass
+    return SpeakingIntent(agent_name=name, intent="pass", reason="No strong opinion")
+
+
+def _mock_vote(
+    name: str, context: MeetingContext, _agent_input: AgentInput
+) -> TurnVote:
+    """Rule-based vote for mock agents."""
+    # Round 1: always continue
+    if context.current_round <= 1:
+        return TurnVote(agent_name=name, vote="continue", reason="Need more discussion")
+    # Round 2+: adopt the first DJ who spoke
+    dj_names = ["groove", "harmony", "crowd"]
+    for msg in reversed(context.messages):
+        if msg.role == "dj" and msg.speaker in dj_names:
+            return TurnVote(
+                agent_name=name, vote="adopt", adopt_agent=msg.speaker,
+                reason=f"Agree with {msg.speaker}'s direction",
+            )
+    return TurnVote(agent_name=name, vote="stop", reason="No strong preference")
+
+
 class MockGroove:
     """Groove agent: prioritizes rhythm, BPM, and danceability."""
 
     @property
     def name(self) -> str:
         return "groove"
+
+    async def should_speak(self, context: MeetingContext, agent_input: AgentInput) -> SpeakingIntent:
+        return _mock_should_speak(self.name, context, agent_input)
+
+    async def vote(self, context: MeetingContext, agent_input: AgentInput) -> TurnVote:
+        return _mock_vote(self.name, context, agent_input)
 
     async def propose(self, agent_input: AgentInput) -> Proposal:
         params = agent_input.current_params
@@ -62,6 +111,12 @@ class MockHarmony:
     def name(self) -> str:
         return "harmony"
 
+    async def should_speak(self, context: MeetingContext, agent_input: AgentInput) -> SpeakingIntent:
+        return _mock_should_speak(self.name, context, agent_input)
+
+    async def vote(self, context: MeetingContext, agent_input: AgentInput) -> TurnVote:
+        return _mock_vote(self.name, context, agent_input)
+
     async def propose(self, agent_input: AgentInput) -> Proposal:
         params = agent_input.current_params
         texture = "wide" if params.texture == "layered" else "layered"
@@ -88,6 +143,16 @@ class MockCrowd:
     @property
     def name(self) -> str:
         return "crowd"
+
+    async def should_speak(self, context: MeetingContext, agent_input: AgentInput) -> SpeakingIntent:
+        intent = _mock_should_speak(self.name, context, agent_input)
+        # Crowd always speaks if there's a user request
+        if agent_input.user_request:
+            return SpeakingIntent(agent_name=self.name, intent="speak", reason="User request present")
+        return intent
+
+    async def vote(self, context: MeetingContext, agent_input: AgentInput) -> TurnVote:
+        return _mock_vote(self.name, context, agent_input)
 
     async def propose(self, agent_input: AgentInput) -> Proposal:
         params = agent_input.current_params

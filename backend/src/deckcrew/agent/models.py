@@ -66,3 +66,28 @@ class Reaction(BaseModel):
     reaction: str
     energy_delta: float = Field(default=0.0, ge=-1.0, le=1.0)
     reason: str
+
+
+# --- Autonomous dialogue schemas (M7.3) ---
+
+SpeakingIntentType = Literal["speak", "pass"]
+
+
+class SpeakingIntent(BaseModel):
+    """Agent's intent to speak or pass in the current round."""
+
+    agent_name: str
+    intent: SpeakingIntentType
+    reason: str
+
+
+VoteType = Literal["continue", "stop", "adopt"]
+
+
+class TurnVote(BaseModel):
+    """Agent's vote on whether to continue deliberation or adopt."""
+
+    agent_name: str
+    vote: VoteType
+    adopt_agent: str | None = None
+    reason: str

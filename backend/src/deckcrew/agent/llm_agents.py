@@ -17,6 +17,8 @@ from deckcrew.agent.models import (
     Critique,
     Proposal,
     Reaction,
+    SpeakingIntent,
+    TurnVote,
 )
 from deckcrew.agent.prompt_builder import (
     build_audience_user_prompt,
@@ -86,6 +88,18 @@ class LLMDJAgent:
             if self._last_proposal is not None:
                 return self._last_proposal
             return await self._mock.propose(agent_input)
+
+    async def should_speak(
+        self, context: MeetingContext, agent_input: AgentInput
+    ) -> SpeakingIntent:
+        # Delegate to mock for now; LLM-based intent is a future enhancement
+        return await self._mock.should_speak(context, agent_input)
+
+    async def vote(
+        self, context: MeetingContext, agent_input: AgentInput
+    ) -> TurnVote:
+        # Delegate to mock for now; LLM-based voting is a future enhancement
+        return await self._mock.vote(context, agent_input)
 
 
 class LLMCritic:

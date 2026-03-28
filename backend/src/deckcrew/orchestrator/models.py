@@ -29,17 +29,34 @@ class Decision(BaseModel):
     rejections: list[RejectionDetail]
 
 
-class DialogueMetadata(BaseModel):
-    """Metadata about the dialogue process within a turn.
+class IntentSummary(BaseModel):
+    """Summary of an agent's speaking intent."""
 
-    Only populated for semi_free mode. None for structured.
-    """
+    agent_name: str
+    intent: str  # "speak" or "pass"
+    reason: str
+
+
+class VoteSummary(BaseModel):
+    """Summary of an agent's turn vote."""
+
+    agent_name: str
+    vote: str  # "continue", "stop", or "adopt"
+    adopt_agent: str | None = None
+    reason: str
+
+
+class DialogueMetadata(BaseModel):
+    """Metadata about the dialogue process within a turn."""
 
     mode: str
     total_messages: int
     rounds_executed: int
     early_stop: bool
     speaker_orders: list[list[str]]
+    intents: list[IntentSummary] | None = None
+    votes: list[VoteSummary] | None = None
+    vote_result: str | None = None  # e.g. "adopt:groove (2/3)"
 
 
 class TurnResult(BaseModel):

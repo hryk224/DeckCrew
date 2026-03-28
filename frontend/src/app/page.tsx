@@ -904,6 +904,9 @@ function DecisionSection({
                   <span className="dialogue-mode-badge">semi_free</span>
                 )}
               </p>
+              {decision.dialogue?.vote_result && (
+                <p className="decision-vote-result">{decision.dialogue.vote_result}</p>
+              )}
               <p className="decision-reason">{decision.reason}</p>
               <p className="decision-applied">
                 mood={decision.applied_params.mood}{" "}

@@ -115,6 +115,7 @@ export interface DialogueMetadata {
   rounds_executed: number;
   early_stop: boolean;
   speaker_orders: string[][];
+  vote_result?: string | null;
 }
 
 // --- Decision ---

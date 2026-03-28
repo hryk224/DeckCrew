@@ -9,6 +9,8 @@ from deckcrew.agent.models import (
     Critique,
     Proposal,
     Reaction,
+    SpeakingIntent,
+    TurnVote,
 )
 
 if TYPE_CHECKING:
@@ -29,13 +31,19 @@ class DJAgent(Protocol):
     async def revise(
         self, agent_input: AgentInput, context: MeetingContext
     ) -> Proposal:
-        """Revise a proposal considering the shared meeting context.
+        """Revise a proposal considering the shared meeting context."""
+        ...
 
-        context contains all previous messages (other DJs, Critic,
-        Audience). Mock agents ignore context and delegate to propose().
-        LLM agents include context in their prompt for conversational
-        deliberation.
-        """
+    async def should_speak(
+        self, context: MeetingContext, agent_input: AgentInput
+    ) -> SpeakingIntent:
+        """Declare intent to speak or pass in the current round."""
+        ...
+
+    async def vote(
+        self, context: MeetingContext, agent_input: AgentInput
+    ) -> TurnVote:
+        """Vote on whether to continue deliberation or adopt a proposal."""
         ...
 
 
