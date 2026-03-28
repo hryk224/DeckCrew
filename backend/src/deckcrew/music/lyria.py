@@ -49,7 +49,17 @@ class LyriaMusicBackend:
         await self._session.play()
         logger.info("[lyria] Session started, playback active")
 
-    async def apply(self, params: MusicParams) -> None:
+    async def apply(
+        self,
+        params: MusicParams,
+        *,
+        section: str = "intro",
+        intent: str = "hold",
+        time_of_night: str = "peak_hours",
+        event_vibe: str = "underground",
+        critic_severity: str | None = None,
+        user_request: str | None = None,
+    ) -> None:
         """Send updated parameters to the Lyria session.
 
         If the WebSocket has been disconnected (idle timeout etc.),
@@ -59,7 +69,16 @@ class LyriaMusicBackend:
             logger.warning("[lyria] apply() called but session is not started")
             return
 
-        command = build_command(params, previous_bpm=self._last_bpm)
+        command = build_command(
+            params,
+            previous_bpm=self._last_bpm,
+            section=section,
+            intent=intent,
+            time_of_night=time_of_night,
+            event_vibe=event_vibe,
+            critic_severity=critic_severity,
+            user_request=user_request,
+        )
 
         # BPM change requires context reset before re-applying
         if command.needs_reset:

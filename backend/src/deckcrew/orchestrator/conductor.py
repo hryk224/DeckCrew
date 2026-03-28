@@ -517,8 +517,17 @@ class Conductor:
         )
         self._store.update(updated)
 
-        # 11. Apply to music backend
-        await self._music.apply(updated.current_params)
+        # 11. Apply to music backend (with full context for genre/mood derivation)
+        assert critique is not None
+        await self._music.apply(
+            updated.current_params,
+            section=new_section.current_section,
+            intent=new_section.transition_intent,
+            time_of_night=resolve_time_of_night(session.venue) if session.venue else "peak_hours",
+            event_vibe=session.venue.event_vibe if session.venue else "underground",
+            critic_severity=critique.severity,
+            user_request=user_request_text,
+        )
 
         # 12. SSE: state
         await self._bus.publish(

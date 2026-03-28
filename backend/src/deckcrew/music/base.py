@@ -14,11 +14,21 @@ class MusicBackend(Protocol):
         """Start music generation / playback."""
         ...
 
-    async def apply(self, params: MusicParams) -> None:
+    async def apply(
+        self,
+        params: MusicParams,
+        *,
+        section: str = "intro",
+        intent: str = "hold",
+        time_of_night: str = "peak_hours",
+        event_vibe: str = "underground",
+        critic_severity: str | None = None,
+        user_request: str | None = None,
+    ) -> None:
         """Apply updated control parameters to the running session.
 
-        Does NOT implicitly call start(). The caller is responsible
-        for ensuring playback is active before calling apply().
+        Context arguments (section, intent, etc.) are used by
+        build_command() for genre resolution and mood derivation.
         """
         ...
 

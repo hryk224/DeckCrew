@@ -10,6 +10,7 @@ from deckcrew.venue.models import VenueContext
 class MusicParams(BaseModel):
     """Current music control parameters."""
 
+    genre_group: str = "house_party"
     mood: str = "neutral"
     bpm: int = Field(default=120, ge=60, le=200)
     energy: float = Field(default=0.5, ge=0.0, le=1.0)

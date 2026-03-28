@@ -1,4 +1,5 @@
 export interface MusicParams {
+  genre_group?: string;
   mood: string;
   bpm: number;
   energy: number;
