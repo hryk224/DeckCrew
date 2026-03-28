@@ -55,25 +55,26 @@ const GENRE_GROUPS = [
   { id: "open_format", label: "Open Format" },
 ] as const;
 
-const AGENT_ICONS: Record<string, string> = {
-  groove: "≋",
-  harmony: "◎",
-  crowd: "⁞⁞",
-};
-
 const AGENT_ROLES: Record<string, string> = {
   groove: "Rhythm",
   harmony: "Tonal",
   crowd: "Floor",
 };
 
+function pixelAgent(agent: string) {
+  return (
+    <span className="pixel-agent" data-agent={agent} aria-hidden="true">
+      <span className="pixel-agent-body" />
+    </span>
+  );
+}
+
 function agentLabel(name: string, showRole: boolean = false) {
   const display = name.charAt(0).toUpperCase() + name.slice(1);
-  const icon = AGENT_ICONS[name];
   const role = AGENT_ROLES[name];
   return (
     <>
-      {icon && <span className="agent-icon" data-agent={name}>{icon}</span>}
+      {pixelAgent(name)}
       {display}
       {showRole && role && <span className="agent-role">{role}</span>}
     </>
@@ -210,9 +211,15 @@ function HomeContent() {
     <div className="app-container">
       <header className="app-header">
         <div className="app-title-row">
-          <span className={`record-dot ${isRunning ? "spinning" : ""}`} />
+          <span className="pixel-cat" aria-hidden="true">
+            <span className="pixel-cat-face" />
+            <span className="pixel-cat-gear" />
+          </span>
           <h1 className="app-title">DeckCrew</h1>
-          <span className={`record-dot ${isRunning ? "spinning" : ""}`} />
+          <span className="pixel-cat" aria-hidden="true">
+            <span className="pixel-cat-face" />
+            <span className="pixel-cat-gear" />
+          </span>
         </div>
 
         {previewState ? (
@@ -356,6 +363,7 @@ function HomeContent() {
       {/* Now Playing */}
       <section className="section">
         <h2 className="section-label">
+          <span className="record-dot" />
           Now Playing
           {session && (
             <span className="turn-count">Turn {session.turn_count}</span>
@@ -482,7 +490,7 @@ function HomeContent() {
 
       {/* DJ Proposals */}
       <section className="section">
-        <h2 className="section-label">DJ Proposals</h2>
+        <h2 className="section-label"><span className="record-dot" /> DJ</h2>
         <div className="proposals-grid">
           {(proposals.length > 0
             ? proposals
@@ -508,7 +516,7 @@ function HomeContent() {
 
       {/* Room Feedback */}
       <section className="section">
-        <h2 className="section-label">Room Feedback</h2>
+        <h2 className="section-label"><span className="record-dot" /> Feedback</h2>
         {feedback.length === 0 ? (
           <p className="feedback-placeholder">
             {session ? "Waiting for feedback..." : "Waiting for session..."}
@@ -518,7 +526,7 @@ function HomeContent() {
             {/* Critic */}
             <div className="feedback-card" data-source="critic">
               <div className="feedback-header">
-                <span className="feedback-source-label">Critic</span>
+                <span className="feedback-source-label">{pixelAgent("critic")}Critic</span>
                 {critic && (
                   <span
                     className={severityClass(
@@ -558,6 +566,7 @@ function HomeContent() {
                   >
                     <div className="feedback-header">
                       <span className="feedback-source-label">
+                        {pixelAgent("audience")}
                         {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
                       </span>
                       <span className="feedback-energy-delta">{deltaStr}</span>
@@ -692,7 +701,7 @@ function DecisionSection({
 
   return (
     <section className="section">
-      <h2 className="section-label">Decision</h2>
+      <h2 className="section-label"><span className="record-dot" /> Decision</h2>
       <div className="decision-content">
         {decision ? (
           <>

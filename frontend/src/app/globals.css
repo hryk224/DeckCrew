@@ -278,6 +278,87 @@ body::before {
   }
 }
 
+/* Pixel cat mascot (box-shadow pixel art, 10x7 grid, 3px/pixel) */
+.pixel-cat {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 21px;
+  vertical-align: middle;
+}
+
+.pixel-cat-face,
+.pixel-cat-gear {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  background: transparent;
+}
+
+/* Face + ears (--text-secondary) */
+.pixel-cat-face {
+  box-shadow:
+    /* ears */
+    6px 0 var(--text-secondary),
+    21px 0 var(--text-secondary),
+    3px 3px var(--text-secondary),
+    6px 3px var(--text-secondary),
+    21px 3px var(--text-secondary),
+    24px 3px var(--text-secondary),
+    /* face top */
+    6px 6px var(--text-secondary),
+    9px 6px var(--text-secondary),
+    12px 6px var(--text-secondary),
+    15px 6px var(--text-secondary),
+    18px 6px var(--text-secondary),
+    21px 6px var(--text-secondary),
+    /* face row 3 (gaps for eyes) */
+    6px 9px var(--text-secondary),
+    12px 9px var(--text-secondary),
+    15px 9px var(--text-secondary),
+    21px 9px var(--text-secondary),
+    /* face row 4 */
+    6px 12px var(--text-secondary),
+    9px 12px var(--text-secondary),
+    12px 12px var(--text-secondary),
+    15px 12px var(--text-secondary),
+    18px 12px var(--text-secondary),
+    21px 12px var(--text-secondary),
+    /* lower face + nose */
+    6px 15px var(--text-secondary),
+    9px 15px var(--text-secondary),
+    12px 15px var(--text-secondary),
+    15px 15px var(--text-secondary),
+    18px 15px var(--text-secondary),
+    21px 15px var(--text-secondary),
+    /* chin */
+    9px 18px var(--text-secondary),
+    12px 18px var(--text-secondary),
+    15px 18px var(--text-secondary),
+    18px 18px var(--text-secondary);
+}
+
+/* Headphones + eyes (--text-accent) */
+.pixel-cat-gear {
+  box-shadow:
+    /* headband */
+    9px 3px var(--text-accent),
+    12px 3px var(--text-accent),
+    15px 3px var(--text-accent),
+    18px 3px var(--text-accent),
+    /* left cup */
+    0px 6px var(--text-accent),
+    0px 9px var(--text-accent),
+    /* right cup */
+    27px 6px var(--text-accent),
+    27px 9px var(--text-accent),
+    /* eyes */
+    9px 9px var(--text-accent),
+    18px 9px var(--text-accent);
+}
+
 .app-title {
   font-family: var(--font-mono);
   font-size: var(--text-xl);
@@ -896,16 +977,84 @@ body::before {
   margin-bottom: var(--space-sm);
 }
 
-/* Agent icon */
-.agent-icon {
-  font-size: 0.8rem;
-  opacity: 0.7;
-  line-height: 1;
+/* Pixel agent characters (6x7 grid, 2px/pixel = 12x14px) */
+.pixel-agent {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 14px;
+  vertical-align: middle;
+  margin-right: 3px;
 }
 
-.agent-icon[data-agent="groove"] { color: var(--color-groove); }
-.agent-icon[data-agent="harmony"] { color: var(--color-harmony); }
-.agent-icon[data-agent="crowd"] { color: var(--color-crowd); }
+.pixel-agent-body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  background: transparent;
+}
+
+/* Groove: DJ with headphones, wide stance */
+.pixel-agent[data-agent="groove"] .pixel-agent-body {
+  box-shadow:
+    2px 0 var(--color-groove), 4px 0 var(--color-groove), 6px 0 var(--color-groove), 8px 0 var(--color-groove),
+    0 2px var(--color-groove), 2px 2px var(--color-groove), 4px 2px var(--color-groove), 6px 2px var(--color-groove), 8px 2px var(--color-groove), 10px 2px var(--color-groove),
+    2px 4px var(--color-groove), 8px 4px var(--color-groove),
+    2px 6px var(--color-groove), 4px 6px var(--color-groove), 6px 6px var(--color-groove), 8px 6px var(--color-groove),
+    4px 8px var(--color-groove), 6px 8px var(--color-groove),
+    4px 10px var(--color-groove), 6px 10px var(--color-groove),
+    2px 12px var(--color-groove), 8px 12px var(--color-groove);
+}
+
+/* Harmony: elegant, slender, flowing */
+.pixel-agent[data-agent="harmony"] .pixel-agent-body {
+  box-shadow:
+    4px 0 var(--color-harmony), 6px 0 var(--color-harmony),
+    2px 2px var(--color-harmony), 4px 2px var(--color-harmony), 6px 2px var(--color-harmony), 8px 2px var(--color-harmony),
+    2px 4px var(--color-harmony), 8px 4px var(--color-harmony),
+    2px 6px var(--color-harmony), 4px 6px var(--color-harmony), 6px 6px var(--color-harmony), 8px 6px var(--color-harmony),
+    2px 8px var(--color-harmony), 4px 8px var(--color-harmony), 6px 8px var(--color-harmony), 8px 8px var(--color-harmony),
+    4px 10px var(--color-harmony), 6px 10px var(--color-harmony),
+    4px 12px var(--color-harmony), 6px 12px var(--color-harmony);
+}
+
+/* Crowd: figure with raised arm */
+.pixel-agent[data-agent="crowd"] .pixel-agent-body {
+  box-shadow:
+    4px 0 var(--color-crowd), 6px 0 var(--color-crowd),
+    2px 2px var(--color-crowd), 4px 2px var(--color-crowd), 6px 2px var(--color-crowd), 10px 2px var(--color-crowd),
+    2px 4px var(--color-crowd), 8px 4px var(--color-crowd), 10px 4px var(--color-crowd),
+    2px 6px var(--color-crowd), 4px 6px var(--color-crowd), 6px 6px var(--color-crowd), 8px 6px var(--color-crowd),
+    2px 8px var(--color-crowd), 4px 8px var(--color-crowd), 6px 8px var(--color-crowd),
+    4px 10px var(--color-crowd), 6px 10px var(--color-crowd),
+    2px 12px var(--color-crowd), 8px 12px var(--color-crowd);
+}
+
+/* Critic: wide/authoritative, glasses */
+.pixel-agent[data-agent="critic"] .pixel-agent-body {
+  box-shadow:
+    2px 0 var(--color-critic), 4px 0 var(--color-critic), 6px 0 var(--color-critic), 8px 0 var(--color-critic),
+    0 2px var(--color-critic), 2px 2px var(--color-critic), 4px 2px var(--color-critic), 6px 2px var(--color-critic), 8px 2px var(--color-critic), 10px 2px var(--color-critic),
+    0 4px var(--color-critic), 4px 4px var(--color-critic), 6px 4px var(--color-critic), 10px 4px var(--color-critic),
+    2px 6px var(--color-critic), 4px 6px var(--color-critic), 6px 6px var(--color-critic), 8px 6px var(--color-critic),
+    0 8px var(--color-critic), 2px 8px var(--color-critic), 4px 8px var(--color-critic), 6px 8px var(--color-critic), 8px 8px var(--color-critic), 10px 8px var(--color-critic),
+    4px 10px var(--color-critic), 6px 10px var(--color-critic),
+    2px 12px var(--color-critic), 8px 12px var(--color-critic);
+}
+
+/* Audience: casual listener */
+.pixel-agent[data-agent="audience"] .pixel-agent-body {
+  box-shadow:
+    4px 0 var(--color-audience), 6px 0 var(--color-audience),
+    2px 2px var(--color-audience), 4px 2px var(--color-audience), 6px 2px var(--color-audience), 8px 2px var(--color-audience),
+    2px 4px var(--color-audience), 8px 4px var(--color-audience),
+    2px 6px var(--color-audience), 4px 6px var(--color-audience), 6px 6px var(--color-audience), 8px 6px var(--color-audience),
+    4px 8px var(--color-audience), 6px 8px var(--color-audience),
+    4px 10px var(--color-audience), 6px 10px var(--color-audience),
+    2px 12px var(--color-audience), 8px 12px var(--color-audience);
+}
 
 /* Agent role label */
 .agent-role {
@@ -976,6 +1125,8 @@ body::before {
 }
 
 .feedback-source-label {
+  display: flex;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 600;
