@@ -37,6 +37,10 @@ async def create_session() -> SessionState:
     except Exception as e:
         logger.error("music_backend.start() failed: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=502, detail=f"Music backend failed: {e}")
+    # Broadcast new session state via SSE so UI updates immediately
+    await event_bus.publish(
+        SSEEvent(event=EVENT_STATE, data=session.model_dump())
+    )
     return session
 
 
@@ -109,6 +113,21 @@ async def update_params(body: ParamsUpdate) -> SessionState:
         )
         return updated
     return session
+
+
+@router.post("/stop")
+async def stop_session() -> dict[str, str]:
+    """Stop the current session and music playback."""
+    session = session_store.get_active()
+    if session is None:
+        raise HTTPException(status_code=404, detail="No active session")
+    await music_backend.stop()
+    updated = session.model_copy(update={"status": "stopped"})
+    session_store.update(updated)
+    await event_bus.publish(
+        SSEEvent(event=EVENT_STATE, data=updated.model_dump())
+    )
+    return {"status": "stopped"}
 
 
 @router.post("/reset", response_model=SessionState)

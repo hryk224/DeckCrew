@@ -4,6 +4,7 @@ import { Suspense, useCallback, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   startSession,
+  stopSession,
   submitRequest,
   runTurn,
   updateGenreGroup,
@@ -27,7 +28,7 @@ import type {
   FeedbackItem,
 } from "@/types/session";
 
-type LoadingState = null | "starting" | "sending" | "turning";
+type LoadingState = null | "starting" | "stopping" | "sending" | "turning";
 
 const SECTION_SYMBOLS: Record<string, string> = {
   intro: "◇",
@@ -198,6 +199,25 @@ function HomeContent() {
     }
   }
 
+  async function handleStopSession() {
+    setLoading("stopping");
+    setError(null);
+    try {
+      await stopSession();
+      reset();
+      if (audioCtx) {
+        audioCtx.close();
+        setAudioCtx(null);
+      }
+    } catch (e) {
+      setError(
+        `Failed to stop session: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setLoading(null);
+    }
+  }
+
   async function handleRunTurn() {
     setLoading("turning");
     setError(null);
@@ -244,11 +264,13 @@ function HomeContent() {
   const loadingLabel =
     loading === "starting"
       ? "Starting..."
-      : loading === "sending"
-        ? "Sending..."
-        : loading === "turning"
-          ? "Running turn..."
-          : null;
+      : loading === "stopping"
+        ? "Stopping..."
+        : loading === "sending"
+          ? "Sending..."
+          : loading === "turning"
+            ? "Running turn..."
+            : null;
 
   return (
     <div className="app-container">
@@ -375,24 +397,34 @@ function HomeContent() {
             </span>
             {!isRunning ? (
               <button
-                className="header-button"
+                className="header-button play-button"
                 type="button"
                 disabled={!connected || isBusy}
                 onClick={handleStartSession}
               >
-                {loading === "starting" ? "Starting..." : "Start Session"}
+                {loading === "starting" ? "Starting..." : "▶ Play"}
               </button>
             ) : (
-              <button
-                className="header-button"
-                type="button"
-                disabled={isBusy}
-                onClick={handleRunTurn}
-            >
-              {loading === "turning" && !requestText
-                ? "Running..."
-                : "Run Turn"}
-            </button>
+              <>
+                <button
+                  className="header-button stop-button"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={handleStopSession}
+                >
+                  {loading === "stopping" ? "Stopping..." : "■ Stop"}
+                </button>
+                <button
+                  className="header-button"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={handleRunTurn}
+                >
+                  {loading === "turning" && !requestText
+                    ? "Running..."
+                    : "Next Turn"}
+                </button>
+              </>
             )}
           </div>
         )}
@@ -404,10 +436,11 @@ function HomeContent() {
           <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
           <LocaleSelector
             current={locale}
-            disabled={!isRunning && !previewState}
-            isPreview={!!previewState}
+            disabled={false}
+            isPreview={!!previewState || !isRunning}
             onSelect={setLocale}
           />
+
         </div>
       </header>
 
@@ -476,8 +509,9 @@ function HomeContent() {
 
         <GenreSelector
           current={session?.current_params.genre_group ?? "house_party"}
-          disabled={!isRunning || !!previewState}
-          isPreview={!!previewState}
+          disabled={false}
+          isPreview={!!previewState || !isRunning}
+          muted={!!previewState}
         />
 
         <div className="now-playing-params">
@@ -755,33 +789,48 @@ function GenreSelector({
   current,
   disabled,
   isPreview,
+  muted = false,
 }: {
   current: string;
   disabled: boolean;
   isPreview: boolean;
+  muted?: boolean;
 }) {
+  const [localChoice, setLocalChoice] = useState(current);
   const [updating, setUpdating] = useState(false);
 
+  // Sync local choice when backend state changes
+  const prevCurrentRef = useRef(current);
+  if (current !== prevCurrentRef.current) {
+    prevCurrentRef.current = current;
+    setLocalChoice(current);
+  }
+
+  const active = isPreview ? localChoice : current;
+
   async function handleSelect(id: string) {
-    if (id === current || disabled || updating) return;
-    setUpdating(true);
-    try {
-      await updateGenreGroup(id);
-    } catch {
-      // SSE will reflect the actual state
-    } finally {
-      setUpdating(false);
+    if (id === active || (disabled && !isPreview) || updating) return;
+    setLocalChoice(id);
+    if (!isPreview) {
+      setUpdating(true);
+      try {
+        await updateGenreGroup(id);
+      } catch {
+        // SSE will reflect the actual state
+      } finally {
+        setUpdating(false);
+      }
     }
   }
 
   return (
-    <div className={`genre-selector ${isPreview ? "preview-disabled" : ""}`}>
+    <div className={`genre-selector ${muted ? "preview-disabled" : ""}`}>
       {GENRE_GROUPS.map((g) => (
         <button
           key={g.id}
           type="button"
-          className={`genre-chip ${g.id === current ? "active" : ""}`}
-          disabled={disabled || updating}
+          className={`genre-chip ${g.id === active ? "active" : ""}`}
+          disabled={disabled && !isPreview}
           onClick={() => handleSelect(g.id)}
         >
           {g.label}

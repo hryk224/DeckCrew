@@ -534,6 +534,16 @@ body::before {
   cursor: not-allowed;
 }
 
+.play-button {
+  color: var(--color-decision);
+  border-color: var(--color-decision);
+}
+
+.stop-button {
+  color: var(--color-critic);
+  border-color: var(--color-critic);
+}
+
 /* Header selectors row */
 .header-selectors {
   display: flex;

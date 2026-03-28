@@ -16,6 +16,10 @@ export async function startSession(): Promise<void> {
   await post("/session");
 }
 
+export async function stopSession(): Promise<void> {
+  await post("/session/stop");
+}
+
 export async function submitRequest(text: string): Promise<void> {
   await post("/session/request", { text });
 }
