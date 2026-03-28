@@ -41,6 +41,7 @@ export interface VenueContext {
   crowd_density: number;
   time_of_night: TimeOfNight;
   event_vibe: EventVibe;
+  timezone?: string | null;
 }
 
 // --- Session state ---

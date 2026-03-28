@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from deckcrew.agent.audience_persona import AudiencePersona
 from deckcrew.agent.models import AgentInput, AudienceInput, CriticInput
+from deckcrew.venue.time_resolver import resolve_time_of_night
 
 if TYPE_CHECKING:
     from deckcrew.orchestrator.meeting import MeetingContext
@@ -120,12 +121,13 @@ def build_audience_user_prompt(
     if audience_input.last_change:
         parts.append(f"Last change: {audience_input.last_change}")
 
-    # Venue context
+    # Venue context (time resolved from timezone if set)
     if audience_input.venue:
         v = audience_input.venue
+        effective_time = resolve_time_of_night(v)
         parts.append(
             f"Venue: {v.room_size} room, crowd density {v.crowd_density:.0%}, "
-            f"{v.time_of_night.replace('_', ' ')}, {v.event_vibe} vibe"
+            f"{effective_time.replace('_', ' ')}, {v.event_vibe} vibe"
         )
 
     parts.append("React to the current music as a JSON object.")

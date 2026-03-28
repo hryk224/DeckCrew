@@ -28,3 +28,4 @@ class VenueContext(BaseModel):
     crowd_density: float = Field(default=0.7, ge=0.0, le=1.0)
     time_of_night: TimeOfNight = "peak_hours"
     event_vibe: EventVibe = "underground"
+    timezone: str | None = None  # e.g. "Asia/Tokyo". None = use preset time_of_night

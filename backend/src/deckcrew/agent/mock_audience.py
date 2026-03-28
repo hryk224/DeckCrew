@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from deckcrew.agent.audience_persona import AudiencePersona
 from deckcrew.agent.models import AudienceInput, Reaction
 from deckcrew.venue.models import VenueContext
+from deckcrew.venue.time_resolver import resolve_time_of_night
 
 # Crowd density amplification range: 1.0 (empty) to 1.3 (packed)
 _MAX_DENSITY_MULTIPLIER = 1.3
@@ -51,10 +52,11 @@ def _adjust_persona_for_venue(
     elif venue.room_size == "intimate":
         energy -= 0.05
 
-    # Time of night adjustment
-    if venue.time_of_night == "peak_hours":
+    # Time of night adjustment (resolved from timezone if set)
+    effective_time = resolve_time_of_night(venue)
+    if effective_time == "peak_hours":
         energy += 0.05
-    elif venue.time_of_night == "early":
+    elif effective_time == "early":
         energy -= 0.05
 
     # Event vibe adjustment (persona-specific effects)

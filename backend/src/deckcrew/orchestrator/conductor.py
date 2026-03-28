@@ -42,6 +42,7 @@ from deckcrew.state.models import (
 )
 from deckcrew.venue.models import VenueContext
 from deckcrew.state.store import SessionStore
+from deckcrew.venue.time_resolver import resolve_time_of_night
 
 from deckcrew.orchestrator.config import (
     AUDIENCE_DIR_THRESHOLD,
@@ -138,10 +139,11 @@ def _apply_feedback_bonus(
             score += VENUE_ENERGY_BONUS
             notes.append("intimate setting favors restraint")
 
-        if venue.time_of_night == "late" and proposes_less_energy:
+        effective_time = resolve_time_of_night(venue)
+        if effective_time == "late" and proposes_less_energy:
             score += VENUE_ENERGY_BONUS
             notes.append("late night favors winding down")
-        elif venue.time_of_night == "early" and proposes_less_energy:
+        elif effective_time == "early" and proposes_less_energy:
             score += VENUE_EARLY_BONUS
             notes.append("early set favors restraint")
 
