@@ -695,7 +695,7 @@ const TIMELINES: Record<string, TimelineScenario> = {
           { source: "critic", name: "critic", content: { issue: "Open format needs a strong opening statement", severity: "low", suggestion: "Commit to a direction early" } },
           { source: "audience", name: "explorer", content: { reaction: "Curious what's coming", energy_delta: 0.05, reason: "Festival crowd is ready for anything" } },
         ],
-        decision: { kind: "major", adopted: "groove", reason: "Adopting groove's breakbeat — crowd-first speaker order prioritized energy", applied_params: { mood: "energetic", bpm: 120, energy: 0.55, texture: "layered", focus: "drums" } },
+        decision: { kind: "major", adopted: "groove", reason: "Adopting groove's breakbeat — crowd-first speaker order prioritized energy", applied_params: { mood: "energetic", bpm: 120, energy: 0.55, texture: "layered", focus: "drums" }, dialogue: { mode: "semi_free", total_messages: 8, rounds_executed: 1, early_stop: false, speaker_orders: [["crowd", "groove", "harmony"]] } },
       },
       {
         name: "timeline-open-format-debate",
@@ -720,7 +720,7 @@ const TIMELINES: Record<string, TimelineScenario> = {
           { source: "critic", name: "critic", content: { issue: "DJs disagree on direction", severity: "medium", suggestion: "Harmony's compromise could satisfy both camps" } },
           { source: "audience", name: "explorer", content: { reaction: "Bit intense but I'm into it", energy_delta: 0.1, reason: "The experimental crowd can handle it" } },
         ],
-        decision: { kind: "major", adopted: "harmony", reason: "Adopting harmony's compromise — semi_free debate resolved groove vs crowd clash", applied_params: { mood: "bright", bpm: 128, energy: 0.7, texture: "dense", focus: "synth" }, rejections: [{ agent_name: "groove", summary: "Push harder into DnB", reason: "Too aggressive a jump for mixed crowd" }, { agent_name: "crowd", summary: "Pull it back", reason: "Valid concern but audience engagement is high" }] },
+        decision: { kind: "major", adopted: "harmony", reason: "Adopting harmony's compromise — semi_free debate resolved groove vs crowd clash", applied_params: { mood: "bright", bpm: 128, energy: 0.7, texture: "dense", focus: "synth" }, rejections: [{ agent_name: "groove", summary: "Push harder into DnB", reason: "Too aggressive a jump for mixed crowd" }, { agent_name: "crowd", summary: "Pull it back", reason: "Valid concern but audience engagement is high" }], dialogue: { mode: "semi_free", total_messages: 14, rounds_executed: 2, early_stop: false, speaker_orders: [["crowd", "groove", "harmony"], ["groove", "harmony", "crowd"]] } },
       },
       {
         name: "timeline-open-format-debate",
@@ -745,7 +745,7 @@ const TIMELINES: Record<string, TimelineScenario> = {
           { source: "critic", name: "critic", content: { issue: "All DJs aligned after the debate", severity: "low", suggestion: "Rare consensus — enjoy the peak" } },
           { source: "audience", name: "explorer", content: { reaction: "This is incredible!", energy_delta: 0.15, reason: "The whole field is dancing" } },
         ],
-        decision: { kind: "minor", adopted: "harmony", reason: "Adopting harmony's vocal layer — DJs converged after semi_free debate", applied_params: { mood: "euphoric", bpm: 130, energy: 0.9, texture: "dense", focus: "vocal" } },
+        decision: { kind: "minor", adopted: "harmony", reason: "Adopting harmony's vocal layer — DJs converged after semi_free debate", applied_params: { mood: "euphoric", bpm: 130, energy: 0.9, texture: "dense", focus: "vocal" }, dialogue: { mode: "semi_free", total_messages: 18, rounds_executed: 2, early_stop: true, speaker_orders: [["harmony", "groove", "crowd"], ["groove", "crowd", "harmony"]] } },
       },
       {
         name: "timeline-open-format-debate",
@@ -770,7 +770,7 @@ const TIMELINES: Record<string, TimelineScenario> = {
           { source: "critic", name: "critic", content: { issue: "Bold genre switch after peak", severity: "low", suggestion: "Open format strength — keep the unpredictability" } },
           { source: "audience", name: "explorer", content: { reaction: "Whoa, didn't see that coming", energy_delta: 0.05, reason: "The surprise factor is keeping people engaged" } },
         ],
-        decision: { kind: "major", adopted: "groove", reason: "Adopting groove's half-time breakbeat — crowd spoke first in semi_free order", applied_params: { mood: "dark", bpm: 125, energy: 0.6, texture: "layered", focus: "drums" } },
+        decision: { kind: "major", adopted: "groove", reason: "Adopting groove's half-time breakbeat — crowd spoke first in semi_free order", applied_params: { mood: "dark", bpm: 125, energy: 0.6, texture: "layered", focus: "drums" }, dialogue: { mode: "semi_free", total_messages: 22, rounds_executed: 2, early_stop: false, speaker_orders: [["crowd", "harmony", "groove"], ["crowd", "groove", "harmony"]] } },
       },
       {
         name: "timeline-open-format-debate",
@@ -795,7 +795,7 @@ const TIMELINES: Record<string, TimelineScenario> = {
           { source: "critic", name: "critic", content: { issue: "Eclectic but coherent journey", severity: "low", suggestion: "The debates made the set more interesting" } },
           { source: "audience", name: "explorer", content: { reaction: "Best set of the festival", energy_delta: -0.05, reason: "Full experience, felt every twist" } },
         ],
-        decision: { kind: "major", adopted: "harmony", reason: "Adopting harmony's final resolution — consensus after an eclectic journey", applied_params: { mood: "warm", bpm: 118, energy: 0.35, texture: "wide", focus: "pad" } },
+        decision: { kind: "major", adopted: "harmony", reason: "Adopting harmony's final resolution — consensus after an eclectic journey", applied_params: { mood: "warm", bpm: 118, energy: 0.35, texture: "wide", focus: "pad" }, dialogue: { mode: "semi_free", total_messages: 26, rounds_executed: 2, early_stop: true, speaker_orders: [["harmony", "crowd", "groove"], ["harmony", "groove", "crowd"]] } },
       },
     ],
   },

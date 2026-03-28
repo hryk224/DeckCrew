@@ -130,4 +130,5 @@ export interface Decision {
   reason: string;
   applied_params: MusicParams;
   rejections?: Rejection[];
+  dialogue?: DialogueMetadata;
 }

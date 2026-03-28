@@ -486,6 +486,9 @@ function HomeContent() {
               <div className="decision-adopted-block">
                 <p className="decision-adopted-agent" data-agent={decision.adopted}>
                   Adopted: {decision.adopted.charAt(0).toUpperCase() + decision.adopted.slice(1)}
+                  {decision.dialogue?.mode === "semi_free" && (
+                    <span className="dialogue-mode-badge">semi_free</span>
+                  )}
                 </p>
                 <p className="decision-reason">{decision.reason}</p>
                 <p className="decision-applied">

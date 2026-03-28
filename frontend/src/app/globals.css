@@ -762,6 +762,20 @@ body::before {
   color: var(--color-decision);
 }
 
+.dialogue-mode-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 0 5px;
+  margin-left: var(--space-sm);
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
 .decision-adopted-agent[data-agent="groove"] {
   color: var(--color-groove);
 }

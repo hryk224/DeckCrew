@@ -526,29 +526,40 @@ class Conductor:
         if suppressions:
             change_summary += f" [minor: {', '.join(suppressions)}]"
 
-        # 8. SSE: decision
-        await self._bus.publish(
-            SSEEvent(
-                event=EVENT_DECISION,
-                data={
-                    "kind": kind,
-                    "round": final_round_info.round,
-                    "total_rounds": final_round_info.total_rounds,
-                    "adopted": decision.adopted_proposal.agent_name,
-                    "reason": decision.reason,
-                    "applied_params": applied_params.model_dump(),
-                    "rejections": [r.model_dump() for r in decision.rejections],
-                },
+        # 8. Build dialogue metadata (shared by SSE and TurnResult)
+        dialogue_meta: DialogueMetadata | None = None
+        if dialogue_mode == "semi_free":
+            dialogue_meta = DialogueMetadata(
+                mode=dialogue_mode,
+                total_messages=len(context.messages),
+                rounds_executed=rounds_executed,
+                early_stop=early_stop,
+                speaker_orders=all_speaker_orders,
             )
+
+        # 9. SSE: decision
+        decision_data: dict[str, object] = {
+            "kind": kind,
+            "round": final_round_info.round,
+            "total_rounds": final_round_info.total_rounds,
+            "adopted": decision.adopted_proposal.agent_name,
+            "reason": decision.reason,
+            "applied_params": applied_params.model_dump(),
+            "rejections": [r.model_dump() for r in decision.rejections],
+        }
+        if dialogue_meta is not None:
+            decision_data["dialogue"] = dialogue_meta.model_dump()
+        await self._bus.publish(
+            SSEEvent(event=EVENT_DECISION, data=decision_data)
         )
 
-        # 9. Update section state
+        # 10. Update section state
         new_section = self._update_section(
             session, kind, change_summary, applied_params,
             critique, reactions,
         )
 
-        # 10. Update session state (once, after all rounds)
+        # 11. Update session state (once, after all rounds)
         updated = session.model_copy(
             update={
                 "current_params": applied_params,
@@ -561,7 +572,7 @@ class Conductor:
         )
         self._store.update(updated)
 
-        # 11. Apply to music backend (with full context for genre/mood derivation)
+        # 12. Apply to music backend (with full context for genre/mood derivation)
         assert critique is not None
         await self._music.apply(
             updated.current_params,
@@ -573,12 +584,12 @@ class Conductor:
             user_request=user_request_text,
         )
 
-        # 12. SSE: state
+        # 13. SSE: state
         await self._bus.publish(
             SSEEvent(event=EVENT_STATE, data=updated.model_dump())
         )
 
-        # 13. Record intervention
+        # 14. Record intervention
         if user_request_text:
             await self._memory.add_intervention(
                 InterventionRecord(
@@ -590,7 +601,7 @@ class Conductor:
                 )
             )
 
-        # 14. Log turn summary
+        # 15. Log turn summary
         prev_section = session.section.current_section
         new_section_name = new_section.current_section
         transition_str = (
@@ -598,16 +609,6 @@ class Conductor:
             if prev_section != new_section_name
             else f"{prev_section}→{new_section_name} (hold)"
         )
-        # Build dialogue metadata for semi_free
-        dialogue_meta: DialogueMetadata | None = None
-        if dialogue_mode == "semi_free":
-            dialogue_meta = DialogueMetadata(
-                mode=dialogue_mode,
-                total_messages=len(context.messages),
-                rounds_executed=rounds_executed,
-                early_stop=early_stop,
-                speaker_orders=all_speaker_orders,
-            )
 
         logger.info(
             "[turn] kind=%s turn=%d rounds=%d/%d mode=%s section=%s adopted=%s early_stop=%s messages=%d",
