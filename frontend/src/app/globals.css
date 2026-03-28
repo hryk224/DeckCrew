@@ -614,13 +614,6 @@ body::before {
   line-height: 1.5;
 }
 
-.proposal-perspective {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  font-style: italic;
-  margin-top: var(--space-xs);
-}
-
 /* === Room Feedback === */
 .feedback-placeholder {
   font-size: var(--text-sm);
@@ -698,12 +691,6 @@ body::before {
   color: var(--color-critic);
   background-color: rgba(247, 118, 142, 0.15);
   font-weight: 600;
-}
-
-.feedback-energy-label {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-audience);
 }
 
 .feedback-energy-delta {
@@ -896,8 +883,16 @@ body::before {
   white-space: nowrap;
 }
 
-.request-button:hover {
+.request-button:hover:not(:disabled) {
   border-color: var(--text-accent);
+}
+
+.request-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+  background-color: var(--bg-elevated);
 }
 
 /* === Memory Panel (debug) === */

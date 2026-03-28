@@ -53,14 +53,6 @@ function severityClass(severity: string): string {
   return "severity-badge severity-low";
 }
 
-function energyLabel(delta: number): string {
-  if (delta > 0.2) return "Wants much more energy";
-  if (delta > 0) return "Wants more energy";
-  if (delta < -0.2) return "Wants much less energy";
-  if (delta < 0) return "Wants less energy";
-  return "Satisfied";
-}
-
 export default function Home() {
   return (
     <Suspense>
@@ -414,9 +406,6 @@ function HomeContent() {
                 {p.agent_name.charAt(0).toUpperCase() + p.agent_name.slice(1)}
               </div>
               <p className="proposal-text">{p.summary}</p>
-              {"perspective" in p && (
-                <p className="proposal-perspective">{p.perspective}</p>
-              )}
             </div>
           ))}
         </div>
