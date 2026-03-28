@@ -31,6 +31,8 @@ const SECTION_SYMBOLS: Record<string, string> = {
   release: "▽",
 };
 
+const SECTION_ORDER = ["intro", "build", "peak", "release"] as const;
+
 
 function extractCritic(
   items: FeedbackItem[],
@@ -343,6 +345,23 @@ function HomeContent() {
           </div>
         )}
 
+        {session?.section && (
+          <div className="section-progress">
+            {SECTION_ORDER.map((s, i) => {
+              const currentIdx = SECTION_ORDER.indexOf(
+                session.section!.current_section as typeof SECTION_ORDER[number],
+              );
+              const state =
+                i === currentIdx ? "current" : i < currentIdx ? "visited" : "upcoming";
+              return (
+                <span key={s} className={`section-step ${state}`}>
+                  {s}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {session?.venue && (
           <div className="venue-badge">
             {session.venue.room_size} · {session.venue.time_of_night.replace("_", " ")} · {session.venue.event_vibe}
@@ -357,6 +376,19 @@ function HomeContent() {
             </span>
           </div>
           <div className="param">
+            <span className="param-key">Texture</span>
+            <span className="param-value">
+              {session?.current_params.texture ?? "—"}
+            </span>
+          </div>
+          <div className="param">
+            <span className="param-key">Focus</span>
+            <span className="param-value">
+              {session?.current_params.focus ?? "—"}
+            </span>
+          </div>
+          <div className="param-divider" />
+          <div className="param">
             <span className="param-key">BPM</span>
             <span className="param-value">
               {session?.current_params.bpm ?? "—"}
@@ -369,18 +401,16 @@ function HomeContent() {
                 ? (session.current_params.energy * 100).toFixed(0) + "%"
                 : "—"}
             </span>
-          </div>
-          <div className="param">
-            <span className="param-key">Texture</span>
-            <span className="param-value">
-              {session?.current_params.texture ?? "—"}
-            </span>
-          </div>
-          <div className="param">
-            <span className="param-key">Focus</span>
-            <span className="param-value">
-              {session?.current_params.focus ?? "—"}
-            </span>
+            {session && (
+              <span className="energy-meter">
+                {Array.from({ length: 10 }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`energy-block ${i < Math.round(session.current_params.energy * 10) ? "filled" : ""}`}
+                  />
+                ))}
+              </span>
+            )}
           </div>
         </div>
       </section>

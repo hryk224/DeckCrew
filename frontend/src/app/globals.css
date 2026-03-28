@@ -542,6 +542,10 @@ body::before {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md) var(--space-xl);
+  padding: var(--space-md);
+  background-color: rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
 }
 
 .param {
@@ -560,6 +564,75 @@ body::before {
   font-family: var(--font-mono);
   font-size: var(--text-lg);
   color: var(--text-primary);
+}
+
+/* Parameter divider (channel separator) */
+.param-divider {
+  width: 1px;
+  align-self: stretch;
+  background-color: var(--border-default);
+  opacity: 0.4;
+}
+
+/* Energy block meter */
+.energy-meter {
+  display: flex;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.energy-block {
+  width: 5px;
+  height: 10px;
+  background-color: var(--border-default);
+}
+
+.energy-block.filled {
+  background-color: var(--text-accent);
+  opacity: 0.6;
+}
+
+.energy-block.filled:nth-child(n+8) {
+  opacity: 0.8;
+}
+
+.energy-block.filled:nth-child(n+9) {
+  background-color: var(--color-groove);
+  opacity: 1;
+}
+
+/* Section progress */
+.section-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.section-step {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.section-step.visited {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.section-step.current {
+  color: var(--text-accent);
+  border-bottom-color: var(--text-accent);
+  opacity: 1;
+}
+
+.section-step.upcoming {
+  color: var(--text-secondary);
+  opacity: 0.3;
 }
 
 /* === DJ Proposals === */
