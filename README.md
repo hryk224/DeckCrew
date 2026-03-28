@@ -90,14 +90,32 @@ curl http://localhost:8000/health
 
 Defined in `.env.example`. Copy to `.env` before starting.
 
-| Variable              | Default                     | Description                                          |
-| --------------------- | --------------------------- | ---------------------------------------------------- |
-| `MUSIC_BACKEND`       | `mock`                      | `mock` for local dev, `lyria` for Lyria Realtime API |
-| `GOOGLE_API_KEY`      | (empty)                     | Google API key (shared by Lyria and Gemini LLM)      |
-| `LYRIA_MODEL`         | `models/lyria-realtime-exp` | Music generation model                               |
-| `LLM_MODEL`           | (empty)                     | Agent LLM model (e.g. `gemini-2.0-flash`)            |
-| `BACKEND_PORT`        | `8000`                      | Backend server port                                  |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`     | Backend API base URL used by frontend                |
+### Music Generation (Lyria / Google)
+
+| Variable         | Default                     | Description                                          |
+| ---------------- | --------------------------- | ---------------------------------------------------- |
+| `MUSIC_BACKEND`  | `mock`                      | `mock` for local dev, `lyria` for Lyria Realtime API |
+| `GOOGLE_API_KEY` | (empty)                     | Google API key for Lyria Realtime                    |
+| `LYRIA_MODEL`    | `models/lyria-realtime-exp` | Music generation model                               |
+
+### Agent LLM
+
+DJ, Critic, and Audience agents use an OpenAI-compatible API when configured. Omit these to keep agents on mock (no LLM calls).
+
+Supports OpenAI, Gemini (via [OpenAI compatibility endpoint](https://ai.google.dev/gemini-api/docs/openai)), Ollama, and other OpenAI-compatible providers.
+
+| Variable         | Default | Description                                         |
+| ---------------- | ------- | --------------------------------------------------- |
+| `LLM_API_KEY`    | (empty) | API key for the LLM provider                        |
+| `LLM_BASE_URL`   | (empty) | Base URL override (omit for OpenAI default)         |
+| `LLM_MODEL_NAME` | (empty) | Model name (e.g. `gpt-4o-mini`, `gemini-2.5-flash`) |
+
+### Server / Frontend
+
+| Variable              | Default                 | Description          |
+| --------------------- | ----------------------- | -------------------- |
+| `BACKEND_PORT`        | `8000`                  | Backend server port  |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL |
 
 ## Configuration Files
 

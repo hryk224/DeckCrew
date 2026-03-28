@@ -90,14 +90,32 @@ curl http://localhost:8000/health
 
 `.env.example` で定義。開発開始前に `.env` へコピーすること。
 
-| 変数名                | デフォルト                  | 説明                                                       |
-| --------------------- | --------------------------- | ---------------------------------------------------------- |
-| `MUSIC_BACKEND`       | `mock`                      | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
-| `GOOGLE_API_KEY`      | (空)                        | Google API キー（Lyria / Gemini LLM 共通）                 |
-| `LYRIA_MODEL`         | `models/lyria-realtime-exp` | 音楽生成モデル                                             |
-| `LLM_MODEL`           | (空)                        | エージェント用 LLM モデル（例: `gemini-2.0-flash`）        |
-| `BACKEND_PORT`        | `8000`                      | バックエンドサーバーのポート番号                           |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`     | フロントエンドが参照するバックエンド API の URL            |
+### 音楽生成（Lyria / Google）
+
+| 変数名           | デフォルト                  | 説明                                                       |
+| ---------------- | --------------------------- | ---------------------------------------------------------- |
+| `MUSIC_BACKEND`  | `mock`                      | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
+| `GOOGLE_API_KEY` | (空)                        | Google API キー（Lyria Realtime 用）                       |
+| `LYRIA_MODEL`    | `models/lyria-realtime-exp` | 音楽生成モデル                                             |
+
+### エージェント LLM
+
+DJ / Critic / Audience エージェントは OpenAI 互換 API で LLM 化可能。未設定の場合は mock で動作する。
+
+OpenAI、Gemini（[OpenAI 互換エンドポイント](https://ai.google.dev/gemini-api/docs/openai)経由）、Ollama など OpenAI 互換プロバイダに対応。
+
+| 変数名           | デフォルト | 説明                                              |
+| ---------------- | ---------- | ------------------------------------------------- |
+| `LLM_API_KEY`    | (空)       | LLM プロバイダの API キー                         |
+| `LLM_BASE_URL`   | (空)       | ベース URL（省略時は OpenAI デフォルト）          |
+| `LLM_MODEL_NAME` | (空)       | モデル名（例: `gpt-4o-mini`, `gemini-2.5-flash`） |
+
+### サーバー / フロントエンド
+
+| 変数名                | デフォルト              | 説明                         |
+| --------------------- | ----------------------- | ---------------------------- |
+| `BACKEND_PORT`        | `8000`                  | バックエンドサーバーのポート |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | バックエンド API の URL      |
 
 ## 設定ファイル
 
