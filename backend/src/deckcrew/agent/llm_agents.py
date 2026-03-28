@@ -61,6 +61,10 @@ class LLMDJAgent:
             logger.warning("[llm] %s.propose() failed, using mock", self._name)
             return await self._mock.propose(agent_input)
 
+    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+        """Revise proposal based on feedback. Currently delegates to propose()."""
+        return await self.propose(agent_input)
+
 
 class LLMCritic:
     """LLM-backed Critic agent with mock fallback."""

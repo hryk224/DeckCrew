@@ -26,6 +26,9 @@ class MockGroove:
             ),
         )
 
+    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+        return await self.propose(agent_input)
+
 
 class MockHarmony:
     """Harmony agent: prioritizes melody, chords, and musical structure."""
@@ -49,6 +52,9 @@ class MockHarmony:
                 focus="pad",
             ),
         )
+
+    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+        return await self.propose(agent_input)
 
 
 class MockCrowd:
@@ -87,3 +93,6 @@ class MockCrowd:
                 focus=params.focus,
             ),
         )
+
+    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+        return await self.propose(agent_input)

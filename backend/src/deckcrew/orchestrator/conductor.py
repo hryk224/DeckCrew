@@ -25,7 +25,7 @@ from deckcrew.memory.base import MemoryStore
 from deckcrew.memory.models import InterventionRecord, PreferenceProfile
 from deckcrew.memory.preference import apply_preference_bonus
 from deckcrew.music.base import MusicBackend
-from deckcrew.orchestrator.models import Decision, RejectionDetail, TurnResult
+from deckcrew.orchestrator.models import Decision, RejectionDetail, RoundInfo, TurnResult
 from deckcrew.orchestrator.repetition import detect_repetition
 from datetime import UTC, datetime
 
@@ -326,16 +326,27 @@ class Conductor:
         self._memory = memory
 
     async def run_turn(
-        self, session: SessionState, kind: ChangeKind = "major"
+        self, session: SessionState, kind: ChangeKind = "major",
+        max_rounds: int = 1,
     ) -> TurnResult:
         """Execute one turn: collect, decide, update, broadcast.
+
+        max_rounds=1 (default): current 1-shot behavior.
+        M6-04 will implement the loop for max_rounds>1.
 
         kind="minor" clamps parameter changes and preserves section.
         kind="major" allows full changes (default, M1/M2 behavior).
         """
-        # 0. Capture user request and load preference profile
+        if max_rounds != 1:
+            raise ValueError(
+                f"max_rounds={max_rounds} is not yet supported. "
+                "Multi-round deliberation will be implemented in M6-04."
+            )
+
+        # 0. Capture user request, load profile, set round info
         user_request_text = session.last_user_request
         profile = await self._memory.get_profile()
+        round_info = RoundInfo(round=1, total_rounds=1)
 
         # 1. Build inputs
         agent_input = AgentInput(
@@ -379,7 +390,11 @@ class Conductor:
         await self._bus.publish(
             SSEEvent(
                 event=EVENT_PROPOSALS,
-                data={"proposals": [p.model_dump() for p in proposals]},
+                data={
+                    "round": round_info.round,
+                    "total_rounds": round_info.total_rounds,
+                    "proposals": [p.model_dump() for p in proposals],
+                },
             )
         )
 
@@ -387,7 +402,11 @@ class Conductor:
         await self._bus.publish(
             SSEEvent(
                 event=EVENT_FEEDBACK,
-                data={"items": [fi.model_dump() for fi in feedback_items]},
+                data={
+                    "round": round_info.round,
+                    "total_rounds": round_info.total_rounds,
+                    "items": [fi.model_dump() for fi in feedback_items],
+                },
             )
         )
 
@@ -422,6 +441,8 @@ class Conductor:
                 event=EVENT_DECISION,
                 data={
                     "kind": kind,
+                    "round": round_info.round,
+                    "total_rounds": round_info.total_rounds,
                     "adopted": decision.adopted_proposal.agent_name,
                     "reason": decision.reason,
                     "applied_params": applied_params.model_dump(),
@@ -488,6 +509,7 @@ class Conductor:
 
         return TurnResult(
             kind=kind,
+            round_info=round_info,
             proposals=proposals,
             feedback=feedback_items,
             decision=decision,

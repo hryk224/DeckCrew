@@ -21,6 +21,14 @@ class DJAgent(Protocol):
 
     async def propose(self, agent_input: AgentInput) -> Proposal: ...
 
+    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+        """Revise a proposal based on feedback from other agents.
+
+        Default: delegates to propose() (ignores feedback).
+        M6-04 will add feedback-aware implementations.
+        """
+        ...
+
 
 class CriticAgent(Protocol):
     """Interface for critic agents.

@@ -99,6 +99,13 @@ export interface Feedback {
   items: FeedbackItem[];
 }
 
+// --- Round info (M6) ---
+
+export interface RoundInfo {
+  round: number;
+  total_rounds: number;
+}
+
 // --- Decision ---
 
 export interface Rejection {

@@ -25,6 +25,8 @@ class SSEEvent(BaseModel):
 class ProposalEvent(BaseModel):
     """Payload schema for session.proposals events."""
 
+    round: int = 1
+    total_rounds: int = 1
     proposals: list[dict[str, Any]]
 
 
@@ -66,6 +68,8 @@ class FeedbackItem(BaseModel):
 class FeedbackEvent(BaseModel):
     """Payload schema for session.feedback events."""
 
+    round: int = 1
+    total_rounds: int = 1
     items: list[FeedbackItem]
 
 
@@ -86,6 +90,8 @@ class DecisionEvent(BaseModel):
     `rejections` and `kind` are optional for backward compatibility with M1.
     """
 
+    round: int = 1
+    total_rounds: int = 1
     adopted: str
     reason: str
     applied_params: MusicParams
