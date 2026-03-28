@@ -18,6 +18,7 @@
   --text-primary: #a9b1d6;
   --text-secondary: #565f89;
   --text-accent: #7aa2f7;
+  --pixel-shadow-rgb: 122, 162, 247;
 
   /* Border */
   --border-default: #292e42;
@@ -57,6 +58,7 @@
   --text-primary: #e0e0f0;
   --text-secondary: #6a6a8a;
   --text-accent: #00e5ff;
+  --pixel-shadow-rgb: 0, 229, 255;
 
   --border-default: #1a1a2e;
 
@@ -78,6 +80,7 @@
   --text-primary: #d4c8b8;
   --text-secondary: #7a6e60;
   --text-accent: #d4a04a;
+  --pixel-shadow-rgb: 212, 160, 74;
 
   --border-default: #2e261e;
 
@@ -208,7 +211,10 @@ body::before {
   font-size: var(--text-xl);
   color: var(--text-accent);
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.12em;
+  text-shadow:
+    1px 1px 0 rgba(var(--pixel-shadow-rgb), 0.35),
+    2px 2px 0 rgba(var(--pixel-shadow-rgb), 0.15);
 }
 
 .header-controls {
