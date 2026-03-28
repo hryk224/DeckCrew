@@ -663,10 +663,33 @@ body::before {
 }
 
 .proposal-agent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 600;
   margin-bottom: var(--space-sm);
+}
+
+/* Agent icon */
+.agent-icon {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.agent-icon[data-agent="groove"] { color: var(--color-groove); }
+.agent-icon[data-agent="harmony"] { color: var(--color-harmony); }
+.agent-icon[data-agent="crowd"] { color: var(--color-crowd); }
+
+/* Agent role label */
+.agent-role {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  margin-left: 2px;
 }
 
 .proposal-card[data-agent="groove"] .proposal-agent {

@@ -33,6 +33,30 @@ const SECTION_SYMBOLS: Record<string, string> = {
 
 const SECTION_ORDER = ["intro", "build", "peak", "release"] as const;
 
+const AGENT_ICONS: Record<string, string> = {
+  groove: "≋",
+  harmony: "◎",
+  crowd: "⁞⁞",
+};
+
+const AGENT_ROLES: Record<string, string> = {
+  groove: "Rhythm",
+  harmony: "Tonal",
+  crowd: "Floor",
+};
+
+function agentLabel(name: string, showRole: boolean = false) {
+  const display = name.charAt(0).toUpperCase() + name.slice(1);
+  const icon = AGENT_ICONS[name];
+  const role = AGENT_ROLES[name];
+  return (
+    <>
+      {icon && <span className="agent-icon" data-agent={name}>{icon}</span>}
+      {display}
+      {showRole && role && <span className="agent-role">{role}</span>}
+    </>
+  );
+}
 
 function extractCritic(
   items: FeedbackItem[],
@@ -433,7 +457,7 @@ function HomeContent() {
               data-agent={p.agent_name}
             >
               <div className="proposal-agent">
-                {p.agent_name.charAt(0).toUpperCase() + p.agent_name.slice(1)}
+                {agentLabel(p.agent_name, true)}
               </div>
               <p className="proposal-text">{p.summary}</p>
             </div>
@@ -569,7 +593,7 @@ function DecisionSection({
           <>
             <div className="decision-adopted-block">
               <p className="decision-adopted-agent" data-agent={decision.adopted}>
-                Adopted: {decision.adopted.charAt(0).toUpperCase() + decision.adopted.slice(1)}
+                Adopted: {agentLabel(decision.adopted)}
                 {decision.kind && (
                   <span className={`decision-kind-badge ${decision.kind === "major" ? "kind-major" : "kind-minor"}`}>
                     {decision.kind}
@@ -607,7 +631,7 @@ function DecisionSection({
                       data-agent={r.agent_name}
                     >
                       <p className="rejection-agent">
-                        {r.agent_name.charAt(0).toUpperCase() + r.agent_name.slice(1)}
+                        {agentLabel(r.agent_name)}
                       </p>
                       <p className="rejection-summary">{r.summary}</p>
                       <p className="rejection-reason">{r.reason}</p>
