@@ -34,6 +34,14 @@ const SECTION_SYMBOLS: Record<string, string> = {
 
 const SECTION_ORDER = ["intro", "build", "peak", "release"] as const;
 
+const THEME_SHORT: Record<string, string> = {
+  "tokyo-night": "TKY",
+  cyberpunk: "CYB",
+  "velvet-lounge": "VLV",
+  "afterhours-mist": "AFT",
+  warehouse: "WRH",
+};
+
 const GENRE_GROUPS = [
   { id: "house_party", label: "House Party" },
   { id: "techno_night", label: "Techno Night" },
@@ -109,7 +117,7 @@ function previewScenarioData(state: PreviewState) {
 
 function HomeContent() {
   const previewState = usePreview();
-  const currentTheme = useTheme();
+  const [currentTheme, setTheme] = useTheme();
   const stream = useSessionStream({ enabled: !previewState });
 
   // In preview mode, use fixture data; otherwise use SSE stream
@@ -342,6 +350,7 @@ function HomeContent() {
         {loadingLabel && !error && (
           <p className="loading-message">{loadingLabel}</p>
         )}
+        <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
       </header>
 
       {/* Now Playing */}
@@ -583,6 +592,30 @@ function HomeContent() {
 
       {/* Memory (debug panel, hidden in preview mode) */}
       {!previewState && <MemoryPanel />}
+    </div>
+  );
+}
+
+function ThemeSelector({
+  currentTheme,
+  onSelect,
+}: {
+  currentTheme: string;
+  onSelect: (themeId: string) => void;
+}) {
+  return (
+    <div className="theme-selector">
+      {THEMES.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          className={`theme-chip ${t.id === currentTheme ? "active" : ""}`}
+          title={t.label}
+          onClick={() => onSelect(t.id)}
+        >
+          {THEME_SHORT[t.id] ?? t.id}
+        </button>
+      ))}
     </div>
   );
 }
