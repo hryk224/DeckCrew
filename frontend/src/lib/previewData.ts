@@ -129,7 +129,7 @@ const SCENARIOS_EN: Record<string, PreviewScenario> = {
       },
       {
         source: "audience",
-        name: "audience",
+        name: "chiller",
         content: {
           reaction: "Vibing along",
           energy_delta: 0.0,
@@ -247,7 +247,7 @@ const SCENARIOS_EN: Record<string, PreviewScenario> = {
       },
       {
         source: "audience",
-        name: "audience",
+        name: "clubber",
         content: {
           reaction: "Feeling the energy!",
           energy_delta: 0.1,
@@ -366,7 +366,7 @@ const SCENARIOS_EN: Record<string, PreviewScenario> = {
       },
       {
         source: "audience",
-        name: "audience",
+        name: "explorer",
         content: {
           reaction: "Losing interest...",
           energy_delta: 0.3,
@@ -495,7 +495,7 @@ const SCENARIOS_JA: Record<string, PreviewScenario> = {
       },
       {
         source: "audience",
-        name: "audience",
+        name: "chiller",
         content: {
           reaction: "いい雰囲気に乗ってる",
           energy_delta: 0.0,
@@ -613,7 +613,7 @@ const SCENARIOS_JA: Record<string, PreviewScenario> = {
       },
       {
         source: "audience",
-        name: "audience",
+        name: "clubber",
         content: {
           reaction: "めっちゃアガる！",
           energy_delta: 0.1,
@@ -732,7 +732,7 @@ const SCENARIOS_JA: Record<string, PreviewScenario> = {
       },
       {
         source: "audience",
-        name: "audience",
+        name: "explorer",
         content: {
           reaction: "ちょっと飽きてきた…",
           energy_delta: 0.3,

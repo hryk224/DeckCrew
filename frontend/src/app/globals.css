@@ -1075,12 +1075,15 @@ body::before {
   margin-bottom: var(--space-sm);
 }
 
-/* Pixel agent characters (6x7 grid, 2px/pixel = 12x14px) */
+/* Pixel agent avatars (8x8 grid, 3px/pixel = 24x24px) */
 .pixel-agent {
+  --px: 3px;
+  --skin: #e8c1a0;
+  --eyes: #2a2a2a;
   position: relative;
   display: inline-block;
-  width: 12px;
-  height: 14px;
+  width: calc(var(--px) * 8);
+  height: calc(var(--px) * 8);
   vertical-align: middle;
   margin-right: 3px;
 }
@@ -1089,69 +1092,150 @@ body::before {
   position: absolute;
   top: 0;
   left: 0;
-  width: 2px;
-  height: 2px;
+  width: var(--px);
+  height: var(--px);
   background: transparent;
 }
 
-/* Groove: DJ with headphones, wide stance */
+/* --- DJ agents (headphone motif) --- */
+
+/* Groove: big headphones + spiky hair, active stance */
+.pixel-agent[data-agent="groove"] {
+  --hair: #2b1a1a;
+  --shirt: var(--color-groove);
+  --pants: #3b4261;
+  --hp: var(--color-crowd);
+}
 .pixel-agent[data-agent="groove"] .pixel-agent-body {
   box-shadow:
-    2px 0 var(--color-groove), 4px 0 var(--color-groove), 6px 0 var(--color-groove), 8px 0 var(--color-groove),
-    0 2px var(--color-groove), 2px 2px var(--color-groove), 4px 2px var(--color-groove), 6px 2px var(--color-groove), 8px 2px var(--color-groove), 10px 2px var(--color-groove),
-    2px 4px var(--color-groove), 8px 4px var(--color-groove),
-    2px 6px var(--color-groove), 4px 6px var(--color-groove), 6px 6px var(--color-groove), 8px 6px var(--color-groove),
-    4px 8px var(--color-groove), 6px 8px var(--color-groove),
-    4px 10px var(--color-groove), 6px 10px var(--color-groove),
-    2px 12px var(--color-groove), 8px 12px var(--color-groove);
+    calc(3*var(--px)) 0 var(--hair), calc(4*var(--px)) 0 var(--hair), calc(5*var(--px)) 0 var(--hair),
+    calc(1*var(--px)) var(--px) var(--hp), calc(2*var(--px)) var(--px) var(--hair), calc(3*var(--px)) var(--px) var(--hp), calc(4*var(--px)) var(--px) var(--hp), calc(5*var(--px)) var(--px) var(--hair), calc(6*var(--px)) var(--px) var(--hp),
+    calc(1*var(--px)) calc(2*var(--px)) var(--hp), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--hp),
+    calc(1*var(--px)) calc(3*var(--px)) var(--hp), calc(2*var(--px)) calc(3*var(--px)) var(--skin), calc(3*var(--px)) calc(3*var(--px)) var(--eyes), calc(4*var(--px)) calc(3*var(--px)) var(--eyes), calc(5*var(--px)) calc(3*var(--px)) var(--skin), calc(6*var(--px)) calc(3*var(--px)) var(--hp),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(1*var(--px)) calc(5*var(--px)) var(--shirt), calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt), calc(6*var(--px)) calc(5*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--shirt), calc(4*var(--px)) calc(6*var(--px)) var(--shirt), calc(5*var(--px)) calc(6*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
 }
 
-/* Harmony: elegant, slender, flowing */
+/* Harmony: headphones + flowing long hair, elegant */
+.pixel-agent[data-agent="harmony"] {
+  --hair: #6b4c3a;
+  --shirt: var(--color-harmony);
+  --pants: #3b4261;
+  --hp: var(--color-decision);
+}
 .pixel-agent[data-agent="harmony"] .pixel-agent-body {
   box-shadow:
-    4px 0 var(--color-harmony), 6px 0 var(--color-harmony),
-    2px 2px var(--color-harmony), 4px 2px var(--color-harmony), 6px 2px var(--color-harmony), 8px 2px var(--color-harmony),
-    2px 4px var(--color-harmony), 8px 4px var(--color-harmony),
-    2px 6px var(--color-harmony), 4px 6px var(--color-harmony), 6px 6px var(--color-harmony), 8px 6px var(--color-harmony),
-    2px 8px var(--color-harmony), 4px 8px var(--color-harmony), 6px 8px var(--color-harmony), 8px 8px var(--color-harmony),
-    4px 10px var(--color-harmony), 6px 10px var(--color-harmony),
-    4px 12px var(--color-harmony), 6px 12px var(--color-harmony);
+    calc(2*var(--px)) 0 var(--hair), calc(3*var(--px)) 0 var(--hair), calc(4*var(--px)) 0 var(--hair), calc(5*var(--px)) 0 var(--hair),
+    calc(1*var(--px)) var(--px) var(--hp), calc(2*var(--px)) var(--px) var(--hair), calc(3*var(--px)) var(--px) var(--hp), calc(4*var(--px)) var(--px) var(--hp), calc(5*var(--px)) var(--px) var(--hair), calc(6*var(--px)) var(--px) var(--hp),
+    0 calc(2*var(--px)) var(--hair), calc(1*var(--px)) calc(2*var(--px)) var(--hp), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--hp), calc(7*var(--px)) calc(2*var(--px)) var(--hair),
+    0 calc(3*var(--px)) var(--hair), calc(1*var(--px)) calc(3*var(--px)) var(--hp), calc(2*var(--px)) calc(3*var(--px)) var(--skin), calc(3*var(--px)) calc(3*var(--px)) var(--eyes), calc(4*var(--px)) calc(3*var(--px)) var(--eyes), calc(5*var(--px)) calc(3*var(--px)) var(--skin), calc(6*var(--px)) calc(3*var(--px)) var(--hp),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--shirt), calc(4*var(--px)) calc(6*var(--px)) var(--shirt), calc(5*var(--px)) calc(6*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
 }
 
-/* Crowd: figure with raised arm */
+/* Crowd: headphones + raised arm, open */
+.pixel-agent[data-agent="crowd"] {
+  --hair: #3a2a20;
+  --shirt: var(--color-crowd);
+  --pants: #3b4261;
+  --hp: var(--color-groove);
+}
 .pixel-agent[data-agent="crowd"] .pixel-agent-body {
   box-shadow:
-    4px 0 var(--color-crowd), 6px 0 var(--color-crowd),
-    2px 2px var(--color-crowd), 4px 2px var(--color-crowd), 6px 2px var(--color-crowd), 10px 2px var(--color-crowd),
-    2px 4px var(--color-crowd), 8px 4px var(--color-crowd), 10px 4px var(--color-crowd),
-    2px 6px var(--color-crowd), 4px 6px var(--color-crowd), 6px 6px var(--color-crowd), 8px 6px var(--color-crowd),
-    2px 8px var(--color-crowd), 4px 8px var(--color-crowd), 6px 8px var(--color-crowd),
-    4px 10px var(--color-crowd), 6px 10px var(--color-crowd),
-    2px 12px var(--color-crowd), 8px 12px var(--color-crowd);
+    calc(2*var(--px)) 0 var(--hair), calc(3*var(--px)) 0 var(--hair), calc(4*var(--px)) 0 var(--hair), calc(5*var(--px)) 0 var(--hair),
+    calc(1*var(--px)) var(--px) var(--hp), calc(2*var(--px)) var(--px) var(--hair), calc(3*var(--px)) var(--px) var(--hp), calc(4*var(--px)) var(--px) var(--hp), calc(5*var(--px)) var(--px) var(--hair), calc(6*var(--px)) var(--px) var(--hp),
+    calc(1*var(--px)) calc(2*var(--px)) var(--hp), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--hp),
+    calc(1*var(--px)) calc(3*var(--px)) var(--hp), calc(2*var(--px)) calc(3*var(--px)) var(--skin), calc(3*var(--px)) calc(3*var(--px)) var(--eyes), calc(4*var(--px)) calc(3*var(--px)) var(--eyes), calc(5*var(--px)) calc(3*var(--px)) var(--skin), calc(6*var(--px)) calc(3*var(--px)) var(--hp),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin), calc(7*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt), calc(6*var(--px)) calc(5*var(--px)) var(--shirt), calc(7*var(--px)) calc(5*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--shirt), calc(4*var(--px)) calc(6*var(--px)) var(--shirt), calc(5*var(--px)) calc(6*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
 }
 
-/* Critic: wide/authoritative, glasses */
+/* --- Audience + Critic personas --- */
+
+/* Critic: glasses + dark suit, stern */
+.pixel-agent[data-agent="critic"] {
+  --hair: #1f1f28;
+  --shirt: var(--color-critic);
+  --pants: #3b4261;
+  --acc: #565f89;
+}
 .pixel-agent[data-agent="critic"] .pixel-agent-body {
   box-shadow:
-    2px 0 var(--color-critic), 4px 0 var(--color-critic), 6px 0 var(--color-critic), 8px 0 var(--color-critic),
-    0 2px var(--color-critic), 2px 2px var(--color-critic), 4px 2px var(--color-critic), 6px 2px var(--color-critic), 8px 2px var(--color-critic), 10px 2px var(--color-critic),
-    0 4px var(--color-critic), 4px 4px var(--color-critic), 6px 4px var(--color-critic), 10px 4px var(--color-critic),
-    2px 6px var(--color-critic), 4px 6px var(--color-critic), 6px 6px var(--color-critic), 8px 6px var(--color-critic),
-    0 8px var(--color-critic), 2px 8px var(--color-critic), 4px 8px var(--color-critic), 6px 8px var(--color-critic), 8px 8px var(--color-critic), 10px 8px var(--color-critic),
-    4px 10px var(--color-critic), 6px 10px var(--color-critic),
-    2px 12px var(--color-critic), 8px 12px var(--color-critic);
+    calc(2*var(--px)) 0 var(--hair), calc(3*var(--px)) 0 var(--hair), calc(4*var(--px)) 0 var(--hair), calc(5*var(--px)) 0 var(--hair),
+    calc(1*var(--px)) var(--px) var(--hair), calc(2*var(--px)) var(--px) var(--hair), calc(3*var(--px)) var(--px) var(--hair), calc(4*var(--px)) var(--px) var(--hair), calc(5*var(--px)) var(--px) var(--hair), calc(6*var(--px)) var(--px) var(--hair),
+    calc(1*var(--px)) calc(2*var(--px)) var(--hair), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--hair),
+    calc(1*var(--px)) calc(3*var(--px)) var(--hair), calc(2*var(--px)) calc(3*var(--px)) var(--eyes), calc(3*var(--px)) calc(3*var(--px)) var(--skin), calc(4*var(--px)) calc(3*var(--px)) var(--skin), calc(5*var(--px)) calc(3*var(--px)) var(--eyes), calc(6*var(--px)) calc(3*var(--px)) var(--hair),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt),
+    calc(1*var(--px)) calc(6*var(--px)) var(--acc), calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--shirt), calc(4*var(--px)) calc(6*var(--px)) var(--shirt), calc(5*var(--px)) calc(6*var(--px)) var(--shirt), calc(6*var(--px)) calc(6*var(--px)) var(--acc),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
 }
 
-/* Audience: casual listener */
-.pixel-agent[data-agent="audience"] .pixel-agent-body {
+/* Clubber: headphones + bold top, energetic */
+.pixel-agent[data-agent="clubber"],
+.pixel-agent[data-agent="raver"] {
+  --hair: #221a30;
+  --shirt: var(--color-groove);
+  --pants: #3b4261;
+  --acc: var(--color-crowd);
+}
+.pixel-agent[data-agent="clubber"] .pixel-agent-body,
+.pixel-agent[data-agent="raver"] .pixel-agent-body {
   box-shadow:
-    4px 0 var(--color-audience), 6px 0 var(--color-audience),
-    2px 2px var(--color-audience), 4px 2px var(--color-audience), 6px 2px var(--color-audience), 8px 2px var(--color-audience),
-    2px 4px var(--color-audience), 8px 4px var(--color-audience),
-    2px 6px var(--color-audience), 4px 6px var(--color-audience), 6px 6px var(--color-audience), 8px 6px var(--color-audience),
-    4px 8px var(--color-audience), 6px 8px var(--color-audience),
-    4px 10px var(--color-audience), 6px 10px var(--color-audience),
-    2px 12px var(--color-audience), 8px 12px var(--color-audience);
+    calc(2*var(--px)) 0 var(--hair), calc(3*var(--px)) 0 var(--acc), calc(4*var(--px)) 0 var(--acc), calc(5*var(--px)) 0 var(--hair),
+    calc(1*var(--px)) var(--px) var(--hair), calc(2*var(--px)) var(--px) var(--hair), calc(3*var(--px)) var(--px) var(--hair), calc(4*var(--px)) var(--px) var(--hair), calc(5*var(--px)) var(--px) var(--hair), calc(6*var(--px)) var(--px) var(--hair),
+    calc(1*var(--px)) calc(2*var(--px)) var(--hair), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--hair),
+    calc(1*var(--px)) calc(3*var(--px)) var(--hair), calc(2*var(--px)) calc(3*var(--px)) var(--skin), calc(3*var(--px)) calc(3*var(--px)) var(--eyes), calc(4*var(--px)) calc(3*var(--px)) var(--eyes), calc(5*var(--px)) calc(3*var(--px)) var(--skin), calc(6*var(--px)) calc(3*var(--px)) var(--hair),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt),
+    calc(1*var(--px)) calc(6*var(--px)) var(--shirt), calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--acc), calc(4*var(--px)) calc(6*var(--px)) var(--acc), calc(5*var(--px)) calc(6*var(--px)) var(--shirt), calc(6*var(--px)) calc(6*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
+}
+
+/* Chiller: hoodie, relaxed */
+.pixel-agent[data-agent="chiller"],
+.pixel-agent[data-agent="regular"] {
+  --hair: #5c4638;
+  --shirt: var(--color-audience);
+  --pants: #414868;
+  --acc: var(--color-harmony);
+}
+.pixel-agent[data-agent="chiller"] .pixel-agent-body,
+.pixel-agent[data-agent="regular"] .pixel-agent-body {
+  box-shadow:
+    calc(2*var(--px)) 0 var(--hair), calc(3*var(--px)) 0 var(--hair), calc(4*var(--px)) 0 var(--hair), calc(5*var(--px)) 0 var(--hair),
+    calc(1*var(--px)) var(--px) var(--acc), calc(2*var(--px)) var(--px) var(--hair), calc(3*var(--px)) var(--px) var(--hair), calc(4*var(--px)) var(--px) var(--hair), calc(5*var(--px)) var(--px) var(--hair), calc(6*var(--px)) var(--px) var(--acc),
+    calc(1*var(--px)) calc(2*var(--px)) var(--acc), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--acc),
+    calc(1*var(--px)) calc(3*var(--px)) var(--acc), calc(2*var(--px)) calc(3*var(--px)) var(--skin), calc(3*var(--px)) calc(3*var(--px)) var(--eyes), calc(4*var(--px)) calc(3*var(--px)) var(--eyes), calc(5*var(--px)) calc(3*var(--px)) var(--skin), calc(6*var(--px)) calc(3*var(--px)) var(--acc),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt),
+    calc(1*var(--px)) calc(6*var(--px)) var(--shirt), calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--shirt), calc(4*var(--px)) calc(6*var(--px)) var(--shirt), calc(5*var(--px)) calc(6*var(--px)) var(--shirt), calc(6*var(--px)) calc(6*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
+}
+
+/* Explorer: cap/visor, adventurous */
+.pixel-agent[data-agent="explorer"] {
+  --hair: #3d2c22;
+  --shirt: var(--text-accent);
+  --pants: #2f354f;
+  --acc: var(--color-audience);
+}
+.pixel-agent[data-agent="explorer"] .pixel-agent-body {
+  box-shadow:
+    calc(2*var(--px)) 0 var(--acc), calc(3*var(--px)) 0 var(--acc), calc(4*var(--px)) 0 var(--acc), calc(5*var(--px)) 0 var(--acc),
+    calc(1*var(--px)) var(--px) var(--acc), calc(2*var(--px)) var(--px) var(--acc), calc(3*var(--px)) var(--px) var(--acc), calc(4*var(--px)) var(--px) var(--acc), calc(5*var(--px)) var(--px) var(--acc), calc(6*var(--px)) var(--px) var(--hair),
+    calc(1*var(--px)) calc(2*var(--px)) var(--hair), calc(2*var(--px)) calc(2*var(--px)) var(--skin), calc(3*var(--px)) calc(2*var(--px)) var(--skin), calc(4*var(--px)) calc(2*var(--px)) var(--skin), calc(5*var(--px)) calc(2*var(--px)) var(--skin), calc(6*var(--px)) calc(2*var(--px)) var(--hair),
+    calc(1*var(--px)) calc(3*var(--px)) var(--hair), calc(2*var(--px)) calc(3*var(--px)) var(--skin), calc(3*var(--px)) calc(3*var(--px)) var(--eyes), calc(4*var(--px)) calc(3*var(--px)) var(--eyes), calc(5*var(--px)) calc(3*var(--px)) var(--skin), calc(6*var(--px)) calc(3*var(--px)) var(--hair),
+    calc(2*var(--px)) calc(4*var(--px)) var(--skin), calc(3*var(--px)) calc(4*var(--px)) var(--skin), calc(4*var(--px)) calc(4*var(--px)) var(--skin), calc(5*var(--px)) calc(4*var(--px)) var(--skin),
+    calc(2*var(--px)) calc(5*var(--px)) var(--shirt), calc(3*var(--px)) calc(5*var(--px)) var(--shirt), calc(4*var(--px)) calc(5*var(--px)) var(--shirt), calc(5*var(--px)) calc(5*var(--px)) var(--shirt),
+    calc(1*var(--px)) calc(6*var(--px)) var(--shirt), calc(2*var(--px)) calc(6*var(--px)) var(--shirt), calc(3*var(--px)) calc(6*var(--px)) var(--acc), calc(4*var(--px)) calc(6*var(--px)) var(--shirt), calc(5*var(--px)) calc(6*var(--px)) var(--shirt), calc(6*var(--px)) calc(6*var(--px)) var(--shirt),
+    calc(2*var(--px)) calc(7*var(--px)) var(--pants), calc(3*var(--px)) calc(7*var(--px)) var(--pants), calc(4*var(--px)) calc(7*var(--px)) var(--pants), calc(5*var(--px)) calc(7*var(--px)) var(--pants);
 }
 
 /* Agent role label */

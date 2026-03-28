@@ -631,7 +631,7 @@ function HomeContent() {
                   >
                     <div className="feedback-header">
                       <span className="feedback-source-label">
-                        {pixelAgent("audience")}
+                        {pixelAgent(a.name)}
                         {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
                       </span>
                       <span className="feedback-energy-delta">{deltaStr}</span>
