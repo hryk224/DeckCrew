@@ -12,9 +12,13 @@ from deckcrew.api.turn import router as turn_router
 
 app = FastAPI(title="DeckCrew API")
 
+_cors_origins = os.environ.get(
+    "CORS_ORIGINS", "http://localhost:3000,http://localhost:3001"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

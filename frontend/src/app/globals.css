@@ -735,13 +735,6 @@ body::before {
   text-align: center;
 }
 
-.loading-message {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin-top: var(--space-sm);
-  text-align: center;
-}
 
 /* === Section (shared panel style) === */
 .section {
@@ -898,37 +891,6 @@ body::before {
   cursor: default;
 }
 
-.live-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--color-decision);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.live-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--color-decision);
-  animation: live-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .live-dot {
-    animation: none;
-  }
-}
 
 /* === Now Playing === */
 .now-playing-params {

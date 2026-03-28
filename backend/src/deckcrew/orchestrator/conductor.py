@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from collections import Counter
 
 from deckcrew.agent.base import AudienceAgent, CriticAgent, DJAgent
 from deckcrew.agent.models import (
@@ -535,7 +536,6 @@ class Conductor:
 
                 if len(adopt_votes) > total / 2:
                     # Majority adopt — find the most adopted agent
-                    from collections import Counter
                     adopt_counts = Counter(v.adopt_agent for v in adopt_votes if v.adopt_agent)
                     if adopt_counts:
                         winner = adopt_counts.most_common(1)[0]
