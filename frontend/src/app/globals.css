@@ -875,6 +875,62 @@ body::before {
   opacity: 1;
 }
 
+/* Volume control */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.volume-icon {
+  font-size: 0.75rem;
+  width: 18px;
+  text-align: center;
+}
+
+.volume-slider {
+  flex: 1;
+  max-width: 160px;
+  height: 3px;
+  appearance: none;
+  background: var(--border-default);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-accent);
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-accent);
+  border: none;
+  cursor: pointer;
+}
+
+.volume-slider:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.volume-value {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  width: 28px;
+  text-align: right;
+}
+
 /* Booth mascot */
 .booth-mascot {
   position: absolute;

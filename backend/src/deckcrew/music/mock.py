@@ -1,4 +1,5 @@
 import logging
+from asyncio import Queue
 
 from deckcrew.music.params import build_command
 from deckcrew.state.models import MusicParams
@@ -15,6 +16,10 @@ class MockMusicBackend:
     def __init__(self) -> None:
         self._playing = False
         self._last_bpm: int | None = None
+
+    @property
+    def audio_queue(self) -> Queue[bytes] | None:
+        return None
 
     async def start(self) -> None:
         self._playing = True

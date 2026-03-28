@@ -1,3 +1,4 @@
+from asyncio import Queue
 from typing import Protocol
 
 from deckcrew.state.models import MusicParams
@@ -9,6 +10,16 @@ class MusicBackend(Protocol):
     Conductor calls only these methods. Lyria-specific details
     must not leak beyond music/ implementations.
     """
+
+    @property
+    def audio_queue(self) -> Queue[bytes] | None:
+        """Queue of raw audio chunks for browser relay.
+
+        Returns None if the backend does not produce audio
+        (e.g. mock backend). The audio WebSocket endpoint
+        reads from this queue to stream to the browser.
+        """
+        ...
 
     async def start(self) -> None:
         """Start music generation / playback."""

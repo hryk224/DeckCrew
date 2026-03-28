@@ -17,6 +17,7 @@ import {
 import { SCENARIO_NAMES, TIMELINE_NAMES } from "@/lib/previewData";
 import { THEMES } from "@/lib/themes";
 import type { Locale } from "@/lib/previewData";
+import { useAudio } from "@/lib/useAudio";
 import { usePreview, type PreviewState } from "@/lib/usePreview";
 import { useSessionStream } from "@/lib/useSessionStream";
 import { useTheme } from "@/lib/useTheme";
@@ -158,12 +159,19 @@ function HomeContent() {
     }
   }
 
+  const [volume, setVolume] = useState(70);
   const [requestText, setRequestText] = useState("");
   const [loading, setLoading] = useState<LoadingState>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isRunning = session !== null && session.status === "running";
   const isBusy = loading !== null;
+  const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
+  const audio = useAudio({
+    enabled: isRunning && !previewState,
+    volume,
+    audioContext: audioCtx,
+  });
 
   const critic = extractCritic(feedback);
   const audiences = extractAudiences(feedback);
@@ -171,6 +179,13 @@ function HomeContent() {
   async function handleStartSession() {
     setLoading("starting");
     setError(null);
+    // Create AudioContext on user gesture to satisfy autoplay policy
+    if (!audioCtx) {
+      const ctx = new AudioContext({ sampleRate: 48000 });
+      setAudioCtx(ctx);
+    } else if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
     try {
       reset();
       await startSession();
@@ -521,6 +536,20 @@ function HomeContent() {
               <span className="mascot-body" />
             </span>
           )}
+        </div>
+
+        <div className="volume-control">
+          <span className="volume-icon">{volume === 0 ? "🔇" : "🔊"}</span>
+          <input
+            type="range"
+            className="volume-slider"
+            min={0}
+            max={100}
+            value={volume}
+            disabled={!isRunning || !!previewState}
+            onChange={(e) => setVolume(Number(e.target.value))}
+          />
+          <span className="volume-value">{volume}%</span>
         </div>
       </section>
 
