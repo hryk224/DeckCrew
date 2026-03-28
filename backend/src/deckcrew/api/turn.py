@@ -9,7 +9,8 @@ from deckcrew.api.event_bus import event_bus
 from deckcrew.memory.registry import memory_store
 from deckcrew.music.registry import music_backend
 from deckcrew.orchestrator.conductor import Conductor
-from deckcrew.orchestrator.config import MAX_DELIBERATION_ROUNDS
+from deckcrew.orchestrator.config import DEFAULT_DIALOGUE_MODE, MAX_DELIBERATION_ROUNDS
+from deckcrew.orchestrator.meeting import DialogueMode
 from deckcrew.orchestrator.models import TurnResult
 from deckcrew.state.models import ChangeKind
 from deckcrew.state.store import session_store
@@ -24,6 +25,7 @@ class TurnRequest(BaseModel):
 
     kind: ChangeKind = "major"
     rounds: int | None = Field(default=None, ge=1, le=10)  # None = use config default
+    dialogue_mode: DialogueMode | None = None  # None = use config default
 
 
 @router.post("/session/turn", response_model=TurnResult)
@@ -41,6 +43,7 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
 
     kind = body.kind if body else "major"
     max_rounds = body.rounds if body and body.rounds else MAX_DELIBERATION_ROUNDS
+    mode: DialogueMode = body.dialogue_mode if body and body.dialogue_mode else DEFAULT_DIALOGUE_MODE  # type: ignore[assignment]
 
     conductor = Conductor(
         agents=create_agents(),
@@ -52,7 +55,7 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
         memory=memory_store,
     )
     try:
-        return await conductor.run_turn(session, kind=kind, max_rounds=max_rounds)
+        return await conductor.run_turn(session, kind=kind, max_rounds=max_rounds, dialogue_mode=mode)
     except Exception as e:
         logger.error("run_turn failed: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Turn failed: {e}")

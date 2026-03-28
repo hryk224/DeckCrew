@@ -4,13 +4,13 @@ Shared context that accumulates all agent messages across rounds.
 Each agent can read the full conversation history to inform its
 next contribution.
 
-Current scope: structured conversational deliberation
-  - Fixed round count, fixed speaker order per round
-  - Conductor controls round progression and final decision
-  - Agents read shared context but don't control flow
+Dialogue modes:
+  - structured: fixed round count, fixed speaker order per round
+  - semi_free: DJ speaker order determined dynamically per round,
+    Critic/Audience remain at round boundaries
 
-Future scope: free-form autonomous dialogue
-  - Agents decide when to speak and when to yield
+Future scope: full free-form autonomous dialogue
+  - All agents decide when to speak and when to yield
   - Convergence conditions are self-determined
 """
 
@@ -21,6 +21,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 AgentRole = Literal["dj", "critic", "audience"]
+DialogueMode = Literal["structured", "semi_free"]
 
 
 class MeetingMessage(BaseModel):
@@ -39,6 +40,7 @@ class MeetingContext(BaseModel):
     messages: list[MeetingMessage] = Field(default_factory=list)
     current_round: int = 1
     total_rounds: int = 1
+    mode: DialogueMode = "structured"
 
     def add(
         self,

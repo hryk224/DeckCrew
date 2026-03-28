@@ -31,6 +31,7 @@ LOW_ENERGY_DELTA = 0.05
 
 # --- Deliberation ---
 MAX_DELIBERATION_ROUNDS = int(os.environ.get("MAX_DELIBERATION_ROUNDS", "2"))
+DEFAULT_DIALOGUE_MODE = os.environ.get("DIALOGUE_MODE", "structured")
 
 
 def get_all_config() -> dict[str, float | int]:

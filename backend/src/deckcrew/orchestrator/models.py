@@ -38,6 +38,7 @@ class TurnResult(BaseModel):
 
     kind: ChangeKind
     round_info: RoundInfo
+    speaker_order: list[str] | None = None
     proposals: list[Proposal]
     feedback: list[FeedbackItem]
     decision: Decision

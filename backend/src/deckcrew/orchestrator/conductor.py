@@ -25,7 +25,7 @@ from deckcrew.memory.base import MemoryStore
 from deckcrew.memory.models import InterventionRecord, PreferenceProfile
 from deckcrew.memory.preference import apply_preference_bonus
 from deckcrew.music.base import MusicBackend
-from deckcrew.orchestrator.meeting import MeetingContext
+from deckcrew.orchestrator.meeting import DialogueMode, MeetingContext
 from deckcrew.orchestrator.models import Decision, RejectionDetail, RoundInfo, TurnResult
 from deckcrew.orchestrator.repetition import detect_repetition
 from datetime import UTC, datetime
@@ -331,12 +331,17 @@ class Conductor:
     async def run_turn(
         self, session: SessionState, kind: ChangeKind = "major",
         max_rounds: int = 1,
+        dialogue_mode: DialogueMode = "structured",
     ) -> TurnResult:
-        """Execute one turn with structured conversational deliberation.
+        """Execute one turn with conversational deliberation.
+
+        dialogue_mode="structured": fixed DJ order (parallel), M6-04 behavior.
+        dialogue_mode="semi_free": DJ order determined dynamically per round,
+          later DJs read earlier DJs' proposals via context.
 
         Each round: DJs propose/revise → Critic evaluates → Audiences react.
-        All messages accumulate in a shared MeetingContext that every agent
-        can read. Decision and state update happen once after the final round.
+        All messages accumulate in a shared MeetingContext.
+        Decision and state update happen once after the final round.
 
         max_rounds=1: traditional 1-shot behavior.
         max_rounds>1: multi-round deliberation with shared context.
@@ -344,7 +349,7 @@ class Conductor:
         # 0. Setup
         user_request_text = session.last_user_request
         profile = await self._memory.get_profile()
-        context = MeetingContext(current_round=1, total_rounds=max_rounds)
+        context = MeetingContext(current_round=1, total_rounds=max_rounds, mode=dialogue_mode)
 
         agent_input = AgentInput(
             current_params=session.current_params,
@@ -368,13 +373,19 @@ class Conductor:
         critique: Critique | None = None
         reactions: list[Reaction] = []
         feedback_items: list[FeedbackItem] = []
+        last_speaker_order: list[str] | None = None
 
         for round_num in range(1, max_rounds + 1):
             context.current_round = round_num
             round_info = RoundInfo(round=round_num, total_rounds=max_rounds)
 
-            # 1. DJ proposals (propose on round 1, revise on subsequent rounds)
-            if round_num == 1:
+            # 1. DJ proposals
+            if dialogue_mode == "semi_free":
+                proposals, last_speaker_order = await self._collect_semi_free(
+                    round_num, agent_input, context, critique, reactions,
+                    user_request_text,
+                )
+            elif round_num == 1:
                 proposals = list(
                     await asyncio.gather(
                         *(agent.propose(agent_input) for agent in self._agents)
@@ -387,14 +398,15 @@ class Conductor:
                     )
                 )
 
-            # Add DJ messages to context
-            for p in proposals:
-                context.add(
-                    speaker=p.agent_name,
-                    role="dj",
-                    content=f"{p.summary} (perspective: {p.perspective})",
-                    data=p.model_dump(),
-                )
+            # Add DJ messages to context (semi_free adds during collection)
+            if dialogue_mode != "semi_free":
+                for p in proposals:
+                    context.add(
+                        speaker=p.agent_name,
+                        role="dj",
+                        content=f"{p.summary} (perspective: {p.perspective})",
+                        data=p.model_dump(),
+                    )
 
             # 2. Critic + Audience feedback
             feedback_results = await asyncio.gather(
@@ -563,11 +575,103 @@ class Conductor:
         return TurnResult(
             kind=kind,
             round_info=final_round_info,
+            speaker_order=last_speaker_order,
             proposals=proposals,
             feedback=feedback_items,
             decision=decision,
             state=updated,
         )
+
+    async def _collect_semi_free(
+        self,
+        round_num: int,
+        agent_input: AgentInput,
+        context: MeetingContext,
+        prev_critique: Critique | None,
+        prev_reactions: list[Reaction],
+        user_request: str | None,
+    ) -> tuple[list[Proposal], list[str]]:
+        """Collect DJ proposals with dynamic speaker order.
+
+        - First DJ: propose() (round 1) or revise() (round 2+)
+        - Subsequent DJs: revise(context) — can read prior DJ's proposal
+        - Order is determined by _determine_dj_order()
+        """
+        ordered_agents = self._determine_dj_order(
+            prev_critique, prev_reactions, user_request,
+            agent_input.current_params.energy,
+        )
+        order_names = [a.name for a in ordered_agents]
+
+        proposals: list[Proposal] = []
+        for idx, agent in enumerate(ordered_agents):
+            if round_num == 1 and idx == 0:
+                # First DJ in round 1: propose from scratch
+                proposal = await agent.propose(agent_input)
+            else:
+                # All others: revise with context (can see prior speakers)
+                proposal = await agent.revise(agent_input, context)
+
+            proposals.append(proposal)
+            # Add to context immediately so next DJ can read it
+            context.add(
+                speaker=proposal.agent_name,
+                role="dj",
+                content=f"{proposal.summary} (perspective: {proposal.perspective})",
+                data=proposal.model_dump(),
+            )
+
+        logger.info(
+            "[semi_free] round=%d order=%s",
+            round_num, order_names,
+        )
+        return proposals, order_names
+
+    def _determine_dj_order(
+        self,
+        prev_critique: Critique | None,
+        prev_reactions: list[Reaction],
+        user_request: str | None,
+        current_energy: float,
+    ) -> list[DJAgent]:
+        """Determine DJ speaking order for semi-free mode.
+
+        Priority rules:
+        1. user_request present → Crowd first
+        2. Audience energy_delta sum > 0.2 → Crowd first
+        3. Critic severity medium+ → DJ whose energy_affinity is
+           farthest from current energy goes first (most change)
+        4. Default → order by distance from current energy (desc)
+        """
+        agents = list(self._agents)
+
+        # Rule 1: user request → Crowd first
+        if user_request:
+            crowd = [a for a in agents if a.name == "crowd"]
+            others = [a for a in agents if a.name != "crowd"]
+            return crowd + others
+
+        # Rule 2: audience wants more energy → Crowd first
+        if prev_reactions:
+            total_delta = sum(r.energy_delta for r in prev_reactions)
+            if total_delta > 0.2:
+                crowd = [a for a in agents if a.name == "crowd"]
+                others = [a for a in agents if a.name != "crowd"]
+                return crowd + others
+
+        # Rule 3: Critic medium+ → sort by name variety (non-adopted first)
+        # Rule 4: Default → sort by typical energy distance
+        # Use a simple heuristic: groove=high energy, harmony=mid, crowd=varies
+        _ENERGY_TENDENCY: dict[str, float] = {
+            "groove": 0.7,
+            "harmony": 0.5,
+            "crowd": 0.5,
+        }
+        agents.sort(
+            key=lambda a: abs(_ENERGY_TENDENCY.get(a.name, 0.5) - current_energy),
+            reverse=True,
+        )
+        return agents
 
     def _update_section(
         self,
