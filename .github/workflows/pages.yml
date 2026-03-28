@@ -22,18 +22,18 @@ jobs:
         working-directory: frontend
     steps:
       # Pin all actions to full commit SHA for supply-chain security
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - uses: actions/configure-pages@983d7730471bc5e4a2b7d7c6dc5f1b11a0c9d0e0 # v5
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b  # v5
       - run: npm ci
       - run: npm run build
         env:
           NEXT_PUBLIC_DEMO_MODE: "true"
-      - uses: actions/upload-pages-artifact@56afc60e40db866a66df0f8d334a5c2fd8a8f18d # v3
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa  # v3
         with:
           path: frontend/out
 
