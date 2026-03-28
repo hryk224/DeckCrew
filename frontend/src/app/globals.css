@@ -696,6 +696,7 @@ body::before {
   background-color: rgba(0, 0, 0, 0.12);
   border: 1px solid var(--border-default);
   border-radius: 4px;
+  position: relative;
 }
 
 .param {
@@ -749,6 +750,79 @@ body::before {
 .energy-block.filled:nth-child(n+9) {
   background-color: var(--color-groove);
   opacity: 1;
+}
+
+/* Booth mascot */
+.booth-mascot {
+  position: absolute;
+  right: var(--space-md);
+  bottom: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  opacity: 0.35;
+  animation: mascot-nod 2s ease-in-out infinite;
+}
+
+.mascot-headphone {
+  width: 10px;
+  height: 4px;
+  border-top: 1.5px solid var(--border-default);
+  border-left: 1.5px solid var(--border-default);
+  border-right: 1.5px solid var(--border-default);
+  border-radius: 5px 5px 0 0;
+}
+
+.mascot-head {
+  width: 8px;
+  height: 6px;
+  background-color: var(--text-secondary);
+  border-radius: 2px 2px 1px 1px;
+  position: relative;
+}
+
+.mascot-visor {
+  position: absolute;
+  top: 2px;
+  left: 1px;
+  right: 1px;
+  height: 1.5px;
+  background-color: var(--text-accent);
+  border-radius: 1px;
+  opacity: 0.8;
+}
+
+.mascot-body {
+  width: 6px;
+  height: 5px;
+  background-color: var(--text-secondary);
+  border-radius: 1px;
+}
+
+@keyframes mascot-nod {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+.booth-mascot.mascot-peak {
+  animation-duration: 1.2s;
+}
+
+.booth-mascot.mascot-idle {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booth-mascot {
+    animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .booth-mascot {
+    display: none;
+  }
 }
 
 /* Section progress */

@@ -465,6 +465,18 @@ function HomeContent() {
               </span>
             )}
           </div>
+          {isRunning && (
+            <span
+              className={`booth-mascot ${session?.section?.current_section === "peak" ? "mascot-peak" : session?.section?.current_section === "release" ? "mascot-idle" : ""}`}
+              aria-hidden="true"
+            >
+              <span className="mascot-headphone" />
+              <span className="mascot-head">
+                <span className="mascot-visor" />
+              </span>
+              <span className="mascot-body" />
+            </span>
+          )}
         </div>
       </section>
 
