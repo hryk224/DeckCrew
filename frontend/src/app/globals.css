@@ -762,6 +762,29 @@ body::before {
   color: var(--color-decision);
 }
 
+.decision-kind-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 3px;
+  padding: 0 5px;
+  margin-left: var(--space-sm);
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+.decision-kind-badge.kind-major {
+  color: var(--color-groove);
+  border: 1px solid var(--color-groove);
+  opacity: 0.8;
+}
+
+.decision-kind-badge.kind-minor {
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  opacity: 0.5;
+}
+
 .dialogue-mode-badge {
   display: inline-block;
   font-size: 0.65rem;
@@ -809,12 +832,22 @@ body::before {
   gap: var(--space-sm);
 }
 
-.decision-rejections-label {
+.decision-rejections-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.decision-rejections-toggle:hover {
+  color: var(--text-primary);
 }
 
 .decision-rejection-item {

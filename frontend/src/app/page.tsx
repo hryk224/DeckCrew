@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import {
   startSession,
   submitRequest,
@@ -478,55 +478,7 @@ function HomeContent() {
       </section>
 
       {/* Decision */}
-      <section className="section">
-        <h2 className="section-label">Decision</h2>
-        <div className="decision-content">
-          {decision ? (
-            <>
-              <div className="decision-adopted-block">
-                <p className="decision-adopted-agent" data-agent={decision.adopted}>
-                  Adopted: {decision.adopted.charAt(0).toUpperCase() + decision.adopted.slice(1)}
-                  {decision.dialogue?.mode === "semi_free" && (
-                    <span className="dialogue-mode-badge">semi_free</span>
-                  )}
-                </p>
-                <p className="decision-reason">{decision.reason}</p>
-                <p className="decision-applied">
-                  bpm={decision.applied_params.bpm}{" "}
-                  energy={(decision.applied_params.energy * 100).toFixed(0)}%{" "}
-                  focus={decision.applied_params.focus}
-                </p>
-              </div>
-
-              {decision.rejections && decision.rejections.length > 0 && (
-                <div className="decision-rejections">
-                  <p className="decision-rejections-label">Rejected</p>
-                  {decision.rejections.map((r) => (
-                    <div
-                      key={r.agent_name}
-                      className="decision-rejection-item"
-                      data-agent={r.agent_name}
-                    >
-                      <p className="rejection-agent">
-                        {r.agent_name.charAt(0).toUpperCase() + r.agent_name.slice(1)}
-                      </p>
-                      <p className="rejection-summary">{r.summary}</p>
-                      <p className="rejection-reason">{r.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="decision-adopted-agent">No decision yet</p>
-              <p className="decision-reason">
-                {session ? "Waiting for turn..." : "Session has not started"}
-              </p>
-            </>
-          )}
-        </div>
-      </section>
+      <DecisionSection decision={decision} session={session} />
 
       {/* Request (hidden in preview mode) */}
       {!previewState && (
@@ -558,6 +510,92 @@ function HomeContent() {
       {/* Memory (debug panel, hidden in preview mode) */}
       {!previewState && <MemoryPanel />}
     </div>
+  );
+}
+
+function DecisionSection({
+  decision,
+  session,
+}: {
+  decision: import("@/types/session").Decision | null;
+  session: import("@/types/session").SessionState | null;
+}) {
+  const [rejectionsOpen, setRejectionsOpen] = useState(false);
+  const rejectionCount = decision?.rejections?.length ?? 0;
+
+  // Reset open state when decision changes
+  const decisionKey = decision ? `${decision.adopted}-${decision.reason}` : "";
+  const prevKeyRef = useRef(decisionKey);
+  if (decisionKey !== prevKeyRef.current) {
+    prevKeyRef.current = decisionKey;
+    setRejectionsOpen(false);
+  }
+
+  return (
+    <section className="section">
+      <h2 className="section-label">Decision</h2>
+      <div className="decision-content">
+        {decision ? (
+          <>
+            <div className="decision-adopted-block">
+              <p className="decision-adopted-agent" data-agent={decision.adopted}>
+                Adopted: {decision.adopted.charAt(0).toUpperCase() + decision.adopted.slice(1)}
+                {decision.kind && (
+                  <span className={`decision-kind-badge ${decision.kind === "major" ? "kind-major" : "kind-minor"}`}>
+                    {decision.kind}
+                  </span>
+                )}
+                {decision.dialogue?.mode === "semi_free" && (
+                  <span className="dialogue-mode-badge">semi_free</span>
+                )}
+              </p>
+              <p className="decision-reason">{decision.reason}</p>
+              <p className="decision-applied">
+                mood={decision.applied_params.mood}{" "}
+                bpm={decision.applied_params.bpm}{" "}
+                energy={(decision.applied_params.energy * 100).toFixed(0)}%{" "}
+                texture={decision.applied_params.texture}{" "}
+                focus={decision.applied_params.focus}
+              </p>
+            </div>
+
+            {rejectionCount > 0 && (
+              <div className="decision-rejections">
+                <button
+                  type="button"
+                  className="decision-rejections-toggle"
+                  onClick={() => setRejectionsOpen((v) => !v)}
+                >
+                  <span>{rejectionsOpen ? "▼" : "▶"}</span>
+                  <span>Rejected ({rejectionCount})</span>
+                </button>
+                {rejectionsOpen &&
+                  decision.rejections!.map((r) => (
+                    <div
+                      key={r.agent_name}
+                      className="decision-rejection-item"
+                      data-agent={r.agent_name}
+                    >
+                      <p className="rejection-agent">
+                        {r.agent_name.charAt(0).toUpperCase() + r.agent_name.slice(1)}
+                      </p>
+                      <p className="rejection-summary">{r.summary}</p>
+                      <p className="rejection-reason">{r.reason}</p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="decision-adopted-agent">No decision yet</p>
+            <p className="decision-reason">
+              {session ? "Waiting for turn..." : "Session has not started"}
+            </p>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 
