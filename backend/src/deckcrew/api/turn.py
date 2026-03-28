@@ -4,12 +4,7 @@ import traceback
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from deckcrew.agent.registry import create_agents, create_audiences, create_critic
-from deckcrew.api.event_bus import event_bus
-from deckcrew.memory.registry import memory_store
-from deckcrew.music.registry import music_backend
-from deckcrew.orchestrator.conductor import Conductor
-from deckcrew.orchestrator.config import DEFAULT_DIALOGUE_MODE, MAX_DELIBERATION_ROUNDS
+from deckcrew.orchestrator.auto_loop import auto_loop
 from deckcrew.orchestrator.meeting import DialogueMode
 from deckcrew.orchestrator.models import TurnResult
 from deckcrew.state.models import ChangeKind
@@ -30,10 +25,10 @@ class TurnRequest(BaseModel):
 
 @router.post("/session/turn", response_model=TurnResult)
 async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
-    """Execute a single turn of the DJ meeting.
+    """Execute a manual turn (always major by default).
 
-    kind="major" (default): full proposals + adoption, M1/M2 behavior.
-    kind="minor": clamped parameter changes, section preserved.
+    Uses the auto_loop's lock to prevent concurrent execution
+    with automatic turns, then resets the auto timer.
     """
     session = session_store.get_active()
     if session is None:
@@ -42,20 +37,18 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
         raise HTTPException(status_code=400, detail="Session is not running")
 
     kind = body.kind if body else "major"
-    max_rounds = body.rounds if body and body.rounds else MAX_DELIBERATION_ROUNDS
-    mode: DialogueMode = body.dialogue_mode if body and body.dialogue_mode else DEFAULT_DIALOGUE_MODE  # type: ignore[assignment]
+    max_rounds = body.rounds if body and body.rounds else None
+    mode = body.dialogue_mode if body and body.dialogue_mode else None
 
-    conductor = Conductor(
-        agents=create_agents(),
-        critic=create_critic(),
-        audiences=create_audiences(),
-        store=session_store,
-        bus=event_bus,
-        music=music_backend,
-        memory=memory_store,
-    )
     try:
-        return await conductor.run_turn(session, kind=kind, max_rounds=max_rounds, dialogue_mode=mode)
+        result = await auto_loop.run_manual_turn(
+            kind=kind,
+            max_rounds=max_rounds,
+            dialogue_mode=mode,
+        )
+        if result is None:
+            raise HTTPException(status_code=500, detail="Turn returned no result")
+        return result  # type: ignore[return-value]
     except Exception as e:
         logger.error("run_turn failed: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Turn failed: {e}")

@@ -205,14 +205,14 @@ function HomeContent() {
     try {
       reset();
       await startSession();
-      // Apply pre-selected genre and locale before first turn
+      // Apply pre-selected genre and locale
       if (pendingGenre !== "house_party") {
         await updateGenreGroup(pendingGenre);
       }
       if (locale !== "en") {
         await updateLocale(locale);
       }
-      // Auto-run first turn so DJ meeting starts immediately
+      // Trigger first turn immediately (auto loop handles subsequent ones)
       await runTurn();
     } catch (e) {
       setError(

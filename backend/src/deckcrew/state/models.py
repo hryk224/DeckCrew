@@ -64,3 +64,4 @@ class SessionState(BaseModel):
     last_user_request: str | None = None
     turn_count: int = 0
     locale: str = "en"
+    pending_major: bool = False

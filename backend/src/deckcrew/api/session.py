@@ -8,6 +8,7 @@ from deckcrew.api.event_bus import event_bus
 from deckcrew.api.events import EVENT_STATE, SSEEvent
 from deckcrew.music.genres import GROUPS_BY_ID
 from deckcrew.music.registry import music_backend
+from deckcrew.orchestrator.auto_loop import auto_loop
 from deckcrew.state.models import SessionState
 from deckcrew.state.store import session_store
 
@@ -30,6 +31,7 @@ async def create_session() -> SessionState:
     before creating a fresh session (reset-then-start).
     """
     if session_store.get_active() is not None:
+        await auto_loop.stop()
         await music_backend.stop()
     session = session_store.create()
     try:
@@ -37,6 +39,8 @@ async def create_session() -> SessionState:
     except Exception as e:
         logger.error("music_backend.start() failed: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=502, detail=f"Music backend failed: {e}")
+    # Start auto turn loop
+    auto_loop.start(bus=event_bus, music=music_backend)
     # Broadcast new session state via SSE so UI updates immediately
     await event_bus.publish(
         SSEEvent(event=EVENT_STATE, data=session.model_dump())
@@ -96,6 +100,7 @@ async def update_params(body: ParamsUpdate) -> SessionState:
         updates["current_params"] = session.current_params.model_copy(
             update={"genre_group": body.genre_group},
         )
+        updates["pending_major"] = True
 
     if body.locale is not None:
         if body.locale not in _SUPPORTED_LOCALES:
@@ -121,6 +126,7 @@ async def stop_session() -> dict[str, str]:
     session = session_store.get_active()
     if session is None:
         raise HTTPException(status_code=404, detail="No active session")
+    await auto_loop.stop()
     await music_backend.stop()
     updated = session.model_copy(update={"status": "stopped"})
     session_store.update(updated)
