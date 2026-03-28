@@ -71,8 +71,8 @@
   --color-audience: #ffb800;
 }
 
-/* === Midnight Club Theme === */
-[data-theme="midnight-club"] {
+/* === Velvet Lounge Theme === */
+[data-theme="velvet-lounge"] {
   --bg-primary: #1c1714;
   --bg-secondary: #14100d;
   --bg-elevated: #241e19;
@@ -91,6 +91,50 @@
 
   --color-critic: #d05050;
   --color-audience: #d4a04a;
+}
+
+/* === Afterhours Mist Theme === */
+[data-theme="afterhours-mist"] {
+  --bg-primary: #161a1e;
+  --bg-secondary: #0e1114;
+  --bg-elevated: #1e2328;
+
+  --text-primary: #c4cdd6;
+  --text-secondary: #6b7580;
+  --text-accent: #8fd3d1;
+  --pixel-shadow-rgb: 143, 211, 209;
+
+  --border-default: #252c32;
+
+  --color-groove: #c87a6a;
+  --color-harmony: #a090cc;
+  --color-crowd: #7ac4cc;
+  --color-decision: #8cc8a0;
+
+  --color-critic: #c07080;
+  --color-audience: #c8b080;
+}
+
+/* === Warehouse Theme === */
+[data-theme="warehouse"] {
+  --bg-primary: #131315;
+  --bg-secondary: #0c0c0e;
+  --bg-elevated: #1c1c20;
+
+  --text-primary: #c8cad0;
+  --text-secondary: #6b6e78;
+  --text-accent: #a0b0cc;
+  --pixel-shadow-rgb: 160, 176, 204;
+
+  --border-default: #282a30;
+
+  --color-groove: #e06848;
+  --color-harmony: #7a6ec8;
+  --color-crowd: #4cb8d8;
+  --color-decision: #90c848;
+
+  --color-critic: #d85060;
+  --color-audience: #d0a848;
 }
 
 /* === Base === */
@@ -137,12 +181,40 @@ body::before {
   background-size: auto;
 }
 
-[data-theme="midnight-club"] body::before {
+[data-theme="velvet-lounge"] body::before {
   opacity: 0.05;
   background-image: radial-gradient(
     ellipse 600px 400px at 30% 40%,
     var(--color-audience),
     transparent
+  );
+  background-size: auto;
+}
+
+[data-theme="afterhours-mist"] body::before {
+  opacity: 0.06;
+  background-image:
+    radial-gradient(
+      ellipse 800px 500px at 20% 60%,
+      var(--text-accent),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 500px 300px at 80% 30%,
+      var(--color-harmony),
+      transparent
+    );
+  background-size: auto;
+}
+
+[data-theme="warehouse"] body::before {
+  opacity: 0.02;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--text-secondary) 0px,
+    var(--text-secondary) 1px,
+    transparent 1px,
+    transparent 40px
   );
   background-size: auto;
 }

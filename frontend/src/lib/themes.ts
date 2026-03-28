@@ -13,7 +13,9 @@ export interface ThemeDef {
 export const THEMES: ThemeDef[] = [
   { id: "tokyo-night", label: "Tokyo Night" },
   { id: "cyberpunk", label: "Cyberpunk" },
-  { id: "midnight-club", label: "Midnight Club" },
+  { id: "velvet-lounge", label: "Velvet Lounge" },
+  { id: "afterhours-mist", label: "Afterhours Mist" },
+  { id: "warehouse", label: "Warehouse" },
 ];
 
 export const DEFAULT_THEME = "tokyo-night";

@@ -9,7 +9,9 @@ import { DEFAULT_THEME, THEMES } from "@/lib/themes";
  *
  * - No `theme` param or `theme=tokyo-night` → no data-theme attribute (default)
  * - `theme=cyberpunk` → data-theme="cyberpunk"
- * - `theme=midnight-club` → data-theme="midnight-club"
+ * - `theme=velvet-lounge` → data-theme="velvet-lounge"
+ * - `theme=afterhours-mist` → data-theme="afterhours-mist"
+ * - `theme=warehouse` → data-theme="warehouse"
  * - Unknown value → ignored, falls back to default
  *
  * Returns the active theme id.
