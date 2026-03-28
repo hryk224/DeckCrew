@@ -90,32 +90,38 @@ curl http://localhost:8000/health
 
 `.env.example` で定義。開発開始前に `.env` へコピーすること。
 
-### 音楽生成（Lyria / Google）
+### Google API キー
 
-| 変数名           | デフォルト                  | 説明                                                       |
-| ---------------- | --------------------------- | ---------------------------------------------------------- |
-| `MUSIC_BACKEND`  | `mock`                      | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
-| `GOOGLE_API_KEY` | (空)                        | Google API キー（Lyria Realtime 用）                       |
-| `LYRIA_MODEL`    | `models/lyria-realtime-exp` | 音楽生成モデル                                             |
+Google API キー 1 つで音楽生成（Lyria Realtime）と DJ エージェント LLM（Gemini）の両方が動作する。未設定の場合は mock モード（API 呼び出しなし）で動作する。
 
-### エージェント LLM
+| 変数名           | デフォルト | 説明                                   |
+| ---------------- | ---------- | -------------------------------------- |
+| `GOOGLE_API_KEY` | (空)       | Google API キー（Lyria + Gemini 共用） |
 
-DJ / Critic / Audience エージェントは OpenAI 互換 API で LLM 化可能。未設定の場合は mock で動作する。
+### 音楽生成
 
-OpenAI、Gemini（[OpenAI 互換エンドポイント](https://ai.google.dev/gemini-api/docs/openai)経由）、Ollama など OpenAI 互換プロバイダに対応。
+| 変数名          | デフォルト                  | 説明                                                       |
+| --------------- | --------------------------- | ---------------------------------------------------------- |
+| `MUSIC_BACKEND` | `mock`                      | `mock`: ローカル開発用、`lyria`: Lyria Realtime API 使用時 |
+| `LYRIA_MODEL`   | `models/lyria-realtime-exp` | 音楽生成モデル                                             |
 
-| 変数名           | デフォルト | 説明                                              |
-| ---------------- | ---------- | ------------------------------------------------- |
-| `LLM_API_KEY`    | (空)       | LLM プロバイダの API キー                         |
-| `LLM_BASE_URL`   | (空)       | ベース URL（省略時は OpenAI デフォルト）          |
-| `LLM_MODEL_NAME` | (空)       | モデル名（例: `gpt-4o-mini`, `gemini-2.5-flash`） |
+### エージェント LLM（上級者向けオーバーライド）
+
+デフォルトでは `GOOGLE_API_KEY` を使って Gemini で DJ エージェントが動作する。以下を設定すると別の LLM プロバイダを使用できる。
+
+| 変数名           | デフォルト | 説明                                          |
+| ---------------- | ---------- | --------------------------------------------- |
+| `LLM_API_KEY`    | (空)       | オーバーライド用 API キー                     |
+| `LLM_BASE_URL`   | (空)       | オーバーライド用ベース URL                    |
+| `LLM_MODEL_NAME` | (空)       | オーバーライド用モデル名（例: `gpt-4o-mini`） |
 
 ### サーバー / フロントエンド
 
-| 変数名                | デフォルト              | 説明                         |
-| --------------------- | ----------------------- | ---------------------------- |
-| `BACKEND_PORT`        | `8000`                  | バックエンドサーバーのポート |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | バックエンド API の URL      |
+| 変数名                | デフォルト                                    | 説明                                 |
+| --------------------- | --------------------------------------------- | ------------------------------------ |
+| `BACKEND_PORT`        | `8000`                                        | バックエンドサーバーのポート         |
+| `CORS_ORIGINS`        | `http://localhost:3000,http://localhost:3001` | 許可オリジン（デプロイ時は変更必須） |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`                       | バックエンド API の URL              |
 
 ## 設定ファイル
 

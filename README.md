@@ -90,32 +90,38 @@ curl http://localhost:8000/health
 
 Defined in `.env.example`. Copy to `.env` before starting.
 
-### Music Generation (Lyria / Google)
+### Google API Key
 
-| Variable         | Default                     | Description                                          |
-| ---------------- | --------------------------- | ---------------------------------------------------- |
-| `MUSIC_BACKEND`  | `mock`                      | `mock` for local dev, `lyria` for Lyria Realtime API |
-| `GOOGLE_API_KEY` | (empty)                     | Google API key for Lyria Realtime                    |
-| `LYRIA_MODEL`    | `models/lyria-realtime-exp` | Music generation model                               |
+A single Google API key powers both music generation (Lyria Realtime) and DJ agent LLM (Gemini). Omit to run in mock mode (no API calls).
 
-### Agent LLM
+| Variable         | Default | Description                         |
+| ---------------- | ------- | ----------------------------------- |
+| `GOOGLE_API_KEY` | (empty) | Google API key for Lyria and Gemini |
 
-DJ, Critic, and Audience agents use an OpenAI-compatible API when configured. Omit these to keep agents on mock (no LLM calls).
+### Music Generation
 
-Supports OpenAI, Gemini (via [OpenAI compatibility endpoint](https://ai.google.dev/gemini-api/docs/openai)), Ollama, and other OpenAI-compatible providers.
+| Variable        | Default                     | Description                                          |
+| --------------- | --------------------------- | ---------------------------------------------------- |
+| `MUSIC_BACKEND` | `mock`                      | `mock` for local dev, `lyria` for Lyria Realtime API |
+| `LYRIA_MODEL`   | `models/lyria-realtime-exp` | Music generation model                               |
 
-| Variable         | Default | Description                                         |
-| ---------------- | ------- | --------------------------------------------------- |
-| `LLM_API_KEY`    | (empty) | API key for the LLM provider                        |
-| `LLM_BASE_URL`   | (empty) | Base URL override (omit for OpenAI default)         |
-| `LLM_MODEL_NAME` | (empty) | Model name (e.g. `gpt-4o-mini`, `gemini-2.5-flash`) |
+### Agent LLM (advanced override)
+
+By default, `GOOGLE_API_KEY` is used with Gemini for DJ agent LLM. Set these to use a different provider instead.
+
+| Variable         | Default | Description                              |
+| ---------------- | ------- | ---------------------------------------- |
+| `LLM_API_KEY`    | (empty) | Override API key                         |
+| `LLM_BASE_URL`   | (empty) | Override base URL                        |
+| `LLM_MODEL_NAME` | (empty) | Override model name (e.g. `gpt-4o-mini`) |
 
 ### Server / Frontend
 
-| Variable              | Default                 | Description          |
-| --------------------- | ----------------------- | -------------------- |
-| `BACKEND_PORT`        | `8000`                  | Backend server port  |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL |
+| Variable              | Default                                       | Description                                               |
+| --------------------- | --------------------------------------------- | --------------------------------------------------------- |
+| `BACKEND_PORT`        | `8000`                                        | Backend server port                                       |
+| `CORS_ORIGINS`        | `http://localhost:3000,http://localhost:3001` | Comma-separated allowed origins (override for deployment) |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000`                       | Backend API base URL                                      |
 
 ## Configuration Files
 

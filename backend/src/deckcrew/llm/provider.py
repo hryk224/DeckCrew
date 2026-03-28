@@ -1,15 +1,18 @@
 """LLM provider abstraction.
 
-Defines the interface for calling LLMs and an OpenAI-compatible
-implementation. Agent-specific prompts are NOT defined here —
-they belong in M6-02. This module only handles:
+Defines the interface for calling LLMs and a provider implementation
+that works with OpenAI-compatible API endpoints (Gemini, OpenAI,
+Ollama, etc.). Agent-specific prompts are NOT defined here.
+
+This module handles:
 - Sending system + user prompts
-- Receiving structured JSON output
+- Receiving structured JSON output (json_schema with prompt fallback)
 - Parsing into Pydantic models
 - Timeout, retry, and error handling
 
-Future: replace OpenAICompatProvider with a CAMEL-AI backed
-provider if multi-round deliberation warrants it.
+The json_schema fallback exists because some providers (e.g. Ollama,
+older API versions) don't support response_format with json_schema.
+When detected, the provider falls back to prompt-based JSON instruction.
 """
 
 from __future__ import annotations

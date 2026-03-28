@@ -92,13 +92,15 @@ class LLMDJAgent:
     async def should_speak(
         self, context: MeetingContext, agent_input: AgentInput
     ) -> SpeakingIntent:
-        # Delegate to mock for now; LLM-based intent is a future enhancement
+        # Rule-based via mock. LLM-based intent would add latency and cost
+        # per round without proportional UX benefit at current agent count.
         return await self._mock.should_speak(context, agent_input)
 
     async def vote(
         self, context: MeetingContext, agent_input: AgentInput
     ) -> TurnVote:
-        # Delegate to mock for now; LLM-based voting is a future enhancement
+        # Rule-based via mock. LLM voting could improve deliberation quality
+        # but requires careful prompt design to avoid infinite loops.
         return await self._mock.vote(context, agent_input)
 
 
