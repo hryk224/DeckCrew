@@ -30,6 +30,13 @@ import type {
 
 type LoadingState = null | "starting" | "stopping" | "sending" | "turning";
 
+const BOOT_STEPS = [
+  "",
+  "Deck starting...",
+  "Tuning frequencies...",
+  "Opening channel...",
+];
+
 const SECTION_SYMBOLS: Record<string, string> = {
   intro: "◇",
   build: "△",
@@ -161,12 +168,14 @@ function HomeContent() {
   }
 
   const [volume, setVolume] = useState(70);
+  const [pendingGenre, setPendingGenre] = useState("house_party");
   const [requestText, setRequestText] = useState("");
   const [loading, setLoading] = useState<LoadingState>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isRunning = session !== null && session.status === "running";
   const isBusy = loading !== null;
+  const isBooting = loading === "starting";
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
   const audio = useAudio({
     enabled: isRunning && !previewState,
@@ -177,8 +186,11 @@ function HomeContent() {
   const critic = extractCritic(feedback);
   const audiences = extractAudiences(feedback);
 
+  const [bootStep, setBootStep] = useState(0);
+
   async function handleStartSession() {
     setLoading("starting");
+    setBootStep(1);
     setError(null);
     // Create AudioContext on user gesture to satisfy autoplay policy
     if (!audioCtx) {
@@ -187,15 +199,30 @@ function HomeContent() {
     } else if (audioCtx.state === "suspended") {
       audioCtx.resume();
     }
+    // Step progression: advance steps on a timer, but finish early if done
+    const stepTimer = setTimeout(() => setBootStep(2), 1200);
+    const stepTimer2 = setTimeout(() => setBootStep(3), 2400);
     try {
       reset();
       await startSession();
+      // Apply pre-selected genre and locale before first turn
+      if (pendingGenre !== "house_party") {
+        await updateGenreGroup(pendingGenre);
+      }
+      if (locale !== "en") {
+        await updateLocale(locale);
+      }
+      // Auto-run first turn so DJ meeting starts immediately
+      await runTurn();
     } catch (e) {
       setError(
         `Failed to start session: ${e instanceof Error ? e.message : String(e)}`,
       );
     } finally {
+      clearTimeout(stepTimer);
+      clearTimeout(stepTimer2);
       setLoading(null);
+      setBootStep(0);
     }
   }
 
@@ -262,15 +289,13 @@ function HomeContent() {
   }
 
   const loadingLabel =
-    loading === "starting"
-      ? "Starting..."
-      : loading === "stopping"
-        ? "Stopping..."
-        : loading === "sending"
-          ? "Sending..."
-          : loading === "turning"
-            ? "Running turn..."
-            : null;
+    loading === "stopping"
+      ? "Stopping..."
+      : loading === "sending"
+        ? "Sending..."
+        : loading === "turning"
+          ? "Running turn..."
+          : null;
 
   return (
     <div className="app-container">
@@ -390,7 +415,13 @@ function HomeContent() {
           </div>
         ) : (
           <div className="control-bar">
-            <div className="control-bar-left">
+            {isBooting && (
+              <div className="boot-overlay">
+                <span className="boot-spinner" />
+                <span className="boot-step">{BOOT_STEPS[bootStep] || BOOT_STEPS[1]}</span>
+              </div>
+            )}
+            <div className={`control-bar-left ${isBooting ? "dimmed" : ""}`}>
               {!isRunning ? (
                 <button
                   className="header-button play-button"
@@ -398,7 +429,7 @@ function HomeContent() {
                   disabled={!connected || isBusy}
                   onClick={handleStartSession}
                 >
-                  {loading === "starting" ? "Starting..." : "▶ Play"}
+                  ▶ Play
                 </button>
               ) : (
                 <>
@@ -426,7 +457,7 @@ function HomeContent() {
                 {!connected ? "Offline" : isRunning ? "Live" : "Ready"}
               </span>
             </div>
-            <div className="control-bar-right">
+            <div className={`control-bar-right ${isBooting ? "dimmed" : ""}`}>
               <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
               <LocaleSelector
                 current={locale}
@@ -501,10 +532,11 @@ function HomeContent() {
         )}
 
         <GenreSelector
-          current={session?.current_params.genre_group ?? "house_party"}
+          current={session?.current_params.genre_group ?? pendingGenre}
           disabled={false}
           isPreview={!!previewState || !isRunning}
           muted={!!previewState}
+          onSelect={setPendingGenre}
         />
 
         <div className="now-playing-params">
@@ -783,11 +815,13 @@ function GenreSelector({
   disabled,
   isPreview,
   muted = false,
+  onSelect,
 }: {
   current: string;
   disabled: boolean;
   isPreview: boolean;
   muted?: boolean;
+  onSelect?: (id: string) => void;
 }) {
   const [localChoice, setLocalChoice] = useState(current);
   const [updating, setUpdating] = useState(false);
@@ -804,6 +838,7 @@ function GenreSelector({
   async function handleSelect(id: string) {
     if (id === active || (disabled && !isPreview) || updating) return;
     setLocalChoice(id);
+    onSelect?.(id);
     if (!isPreview) {
       setUpdating(true);
       try {

@@ -63,7 +63,15 @@ export function useSessionStream(
 
     es.addEventListener("session.state", (e: MessageEvent) => {
       const data = JSON.parse(e.data) as SessionState;
-      setSession(data);
+      if (data.status === "stopped") {
+        // Clear UI on stop — treat as no active session
+        setSession(null);
+        setProposals([]);
+        setFeedback([]);
+        setDecision(null);
+      } else {
+        setSession(data);
+      }
       setConnected(true);
     });
 
