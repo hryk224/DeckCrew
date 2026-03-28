@@ -712,7 +712,7 @@ function HomeContent() {
       {/* Request (hidden in preview mode) */}
       {!previewState && (
         <section className="section">
-          <h2 className="section-label">Request</h2>
+          <h2 className="section-label"><span className="record-dot" /> Request</h2>
           <div className="request-form">
             <textarea
               className="request-input"

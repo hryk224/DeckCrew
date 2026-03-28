@@ -160,7 +160,10 @@ export function useAudio(options: UseAudioOptions): UseAudioReturn {
     };
 
     return () => {
-      ws.close();
+      // Ensure WebSocket is fully closed before any new connection
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
       wsRef.current = null;
       if (gainRef.current) {
         gainRef.current.disconnect();
@@ -168,6 +171,7 @@ export function useAudio(options: UseAudioOptions): UseAudioReturn {
       }
       bufferRef.current = [];
       playingRef.current = false;
+      nextTimeRef.current = 0;
       setState({ connected: false, playing: false });
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- volume handled via gainRef

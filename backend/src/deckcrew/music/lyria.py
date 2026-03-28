@@ -199,7 +199,11 @@ class LyriaMusicBackend:
                 pass
             self._receive_task = None
         await self._close_session()
-        await self._open_session()
+        try:
+            await self._open_session()
+        except Exception:
+            logger.exception("[lyria] Reconnect failed, session unavailable")
+            return
         self._receive_task = asyncio.create_task(self._receive_loop())
         logger.info("[lyria] Reconnected and playback resumed")
 
@@ -222,7 +226,9 @@ class LyriaMusicBackend:
 
     async def _send_command(self, command: LyriaCommand) -> None:
         """Translate LyriaCommand into SDK calls."""
-        assert self._session is not None
+        if self._session is None:
+            logger.warning("[lyria] _send_command called but session is None, skipping")
+            return
 
         # Set weighted prompts
         prompts = [
