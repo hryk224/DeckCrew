@@ -1,4 +1,6 @@
-from typing import Protocol
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Protocol
 
 from deckcrew.agent.models import (
     AgentInput,
@@ -8,6 +10,9 @@ from deckcrew.agent.models import (
     Proposal,
     Reaction,
 )
+
+if TYPE_CHECKING:
+    from deckcrew.orchestrator.meeting import MeetingContext
 
 
 class DJAgent(Protocol):
@@ -21,11 +26,15 @@ class DJAgent(Protocol):
 
     async def propose(self, agent_input: AgentInput) -> Proposal: ...
 
-    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
-        """Revise a proposal based on feedback from other agents.
+    async def revise(
+        self, agent_input: AgentInput, context: MeetingContext
+    ) -> Proposal:
+        """Revise a proposal considering the shared meeting context.
 
-        Default: delegates to propose() (ignores feedback).
-        M6-04 will add feedback-aware implementations.
+        context contains all previous messages (other DJs, Critic,
+        Audience). Mock agents ignore context and delegate to propose().
+        LLM agents include context in their prompt for conversational
+        deliberation.
         """
         ...
 

@@ -2,13 +2,14 @@ import logging
 import traceback
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from deckcrew.agent.registry import create_agents, create_audiences, create_critic
 from deckcrew.api.event_bus import event_bus
 from deckcrew.memory.registry import memory_store
 from deckcrew.music.registry import music_backend
 from deckcrew.orchestrator.conductor import Conductor
+from deckcrew.orchestrator.config import MAX_DELIBERATION_ROUNDS
 from deckcrew.orchestrator.models import TurnResult
 from deckcrew.state.models import ChangeKind
 from deckcrew.state.store import session_store
@@ -22,6 +23,7 @@ class TurnRequest(BaseModel):
     """Optional request body for turn execution."""
 
     kind: ChangeKind = "major"
+    rounds: int | None = Field(default=None, ge=1, le=10)  # None = use config default
 
 
 @router.post("/session/turn", response_model=TurnResult)
@@ -38,6 +40,7 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
         raise HTTPException(status_code=400, detail="Session is not running")
 
     kind = body.kind if body else "major"
+    max_rounds = body.rounds if body and body.rounds else MAX_DELIBERATION_ROUNDS
 
     conductor = Conductor(
         agents=create_agents(),
@@ -49,7 +52,7 @@ async def execute_turn(body: TurnRequest | None = None) -> TurnResult:
         memory=memory_store,
     )
     try:
-        return await conductor.run_turn(session, kind=kind)
+        return await conductor.run_turn(session, kind=kind, max_rounds=max_rounds)
     except Exception as e:
         logger.error("run_turn failed: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Turn failed: {e}")

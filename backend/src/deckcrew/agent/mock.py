@@ -26,7 +26,7 @@ class MockGroove:
             ),
         )
 
-    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+    async def revise(self, agent_input: AgentInput, context: object) -> Proposal:
         return await self.propose(agent_input)
 
 
@@ -53,7 +53,7 @@ class MockHarmony:
             ),
         )
 
-    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+    async def revise(self, agent_input: AgentInput, context: object) -> Proposal:
         return await self.propose(agent_input)
 
 
@@ -94,5 +94,5 @@ class MockCrowd:
             ),
         )
 
-    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
+    async def revise(self, agent_input: AgentInput, context: object) -> Proposal:
         return await self.propose(agent_input)

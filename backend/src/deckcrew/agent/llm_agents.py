@@ -21,9 +21,11 @@ from deckcrew.agent.models import (
 from deckcrew.agent.prompt_builder import (
     build_audience_user_prompt,
     build_critic_user_prompt,
+    build_dj_revise_prompt,
     build_dj_user_prompt,
     load_system_prompt,
 )
+from deckcrew.orchestrator.meeting import MeetingContext
 from deckcrew.llm.provider import LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,7 @@ class LLMDJAgent:
         self._provider = provider
         self._mock = mock_fallback
         self._system = load_system_prompt(agent_name)
+        self._last_proposal: Proposal | None = None
 
     @property
     def name(self) -> str:
@@ -53,17 +56,35 @@ class LLMDJAgent:
             result = await self._provider.complete(
                 self._system, user, Proposal
             )
-            # Ensure agent_name matches
             if result.agent_name != self._name:
                 result = result.model_copy(update={"agent_name": self._name})
-            return result
         except Exception:
             logger.warning("[llm] %s.propose() failed, using mock", self._name)
-            return await self._mock.propose(agent_input)
+            result = await self._mock.propose(agent_input)
+        self._last_proposal = result
+        return result
 
-    async def revise(self, agent_input: AgentInput, feedback: str) -> Proposal:
-        """Revise proposal based on feedback. Currently delegates to propose()."""
-        return await self.propose(agent_input)
+    async def revise(
+        self, agent_input: AgentInput, context: MeetingContext
+    ) -> Proposal:
+        """Revise proposal considering the shared meeting context.
+
+        On failure, returns the Round 1 proposal (not a re-generation).
+        """
+        user = build_dj_revise_prompt(self._name, agent_input, context)
+        try:
+            result = await self._provider.complete(
+                self._system, user, Proposal
+            )
+            if result.agent_name != self._name:
+                result = result.model_copy(update={"agent_name": self._name})
+            self._last_proposal = result
+            return result
+        except Exception:
+            logger.warning("[llm] %s.revise() failed, reusing round 1 proposal", self._name)
+            if self._last_proposal is not None:
+                return self._last_proposal
+            return await self._mock.propose(agent_input)
 
 
 class LLMCritic:

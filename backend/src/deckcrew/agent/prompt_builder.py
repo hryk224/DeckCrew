@@ -15,8 +15,13 @@ from __future__ import annotations
 import functools
 from pathlib import Path
 
+from typing import TYPE_CHECKING
+
 from deckcrew.agent.audience_persona import AudiencePersona
 from deckcrew.agent.models import AgentInput, AudienceInput, CriticInput
+
+if TYPE_CHECKING:
+    from deckcrew.orchestrator.meeting import MeetingContext
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
@@ -49,6 +54,20 @@ def build_dj_user_prompt(agent_name: str, agent_input: AgentInput) -> str:
         f"You are {agent_name}. Propose your next direction as a JSON object."
     )
     return "\n".join(parts)
+
+
+def build_dj_revise_prompt(
+    agent_name: str, agent_input: AgentInput, context: MeetingContext
+) -> str:
+    """Build user prompt for a DJ agent revising after reading the meeting."""
+    base = build_dj_user_prompt(agent_name, agent_input)
+    meeting_log = context.format_log()
+    return (
+        f"{base}\n\n"
+        f"Previous meeting discussion:\n{meeting_log}\n\n"
+        f"Considering the above discussion, revise your proposal. "
+        f"Respond as a JSON object."
+    )
 
 
 # --- Critic ---

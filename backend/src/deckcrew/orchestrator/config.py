@@ -29,6 +29,9 @@ BPM_STAGNATION_PENALTY = -0.15
 ENERGY_STAGNATION_PENALTY = -0.1
 LOW_ENERGY_DELTA = 0.05
 
+# --- Deliberation ---
+MAX_DELIBERATION_ROUNDS = int(os.environ.get("MAX_DELIBERATION_ROUNDS", "2"))
+
 
 def get_all_config() -> dict[str, float | int]:
     """Return all tuning parameters as a flat dict (for debug API)."""
@@ -46,4 +49,5 @@ def get_all_config() -> dict[str, float | int]:
         "bpm_stagnation_penalty": BPM_STAGNATION_PENALTY,
         "energy_stagnation_penalty": ENERGY_STAGNATION_PENALTY,
         "low_energy_delta": LOW_ENERGY_DELTA,
+        "max_deliberation_rounds": MAX_DELIBERATION_ROUNDS,
     }

@@ -25,6 +25,7 @@ from deckcrew.memory.base import MemoryStore
 from deckcrew.memory.models import InterventionRecord, PreferenceProfile
 from deckcrew.memory.preference import apply_preference_bonus
 from deckcrew.music.base import MusicBackend
+from deckcrew.orchestrator.meeting import MeetingContext
 from deckcrew.orchestrator.models import Decision, RejectionDetail, RoundInfo, TurnResult
 from deckcrew.orchestrator.repetition import detect_repetition
 from datetime import UTC, datetime
@@ -329,26 +330,20 @@ class Conductor:
         self, session: SessionState, kind: ChangeKind = "major",
         max_rounds: int = 1,
     ) -> TurnResult:
-        """Execute one turn: collect, decide, update, broadcast.
+        """Execute one turn with structured conversational deliberation.
 
-        max_rounds=1 (default): current 1-shot behavior.
-        M6-04 will implement the loop for max_rounds>1.
+        Each round: DJs propose/revise → Critic evaluates → Audiences react.
+        All messages accumulate in a shared MeetingContext that every agent
+        can read. Decision and state update happen once after the final round.
 
-        kind="minor" clamps parameter changes and preserves section.
-        kind="major" allows full changes (default, M1/M2 behavior).
+        max_rounds=1: traditional 1-shot behavior.
+        max_rounds>1: multi-round deliberation with shared context.
         """
-        if max_rounds != 1:
-            raise ValueError(
-                f"max_rounds={max_rounds} is not yet supported. "
-                "Multi-round deliberation will be implemented in M6-04."
-            )
-
-        # 0. Capture user request, load profile, set round info
+        # 0. Setup
         user_request_text = session.last_user_request
         profile = await self._memory.get_profile()
-        round_info = RoundInfo(round=1, total_rounds=1)
+        context = MeetingContext(current_round=1, total_rounds=max_rounds)
 
-        # 1. Build inputs
         agent_input = AgentInput(
             current_params=session.current_params,
             last_change=session.last_change,
@@ -366,54 +361,104 @@ class Conductor:
             venue=session.venue,
         )
 
-        # 2. Collect proposals in parallel
-        proposals: list[Proposal] = list(
-            await asyncio.gather(
-                *(agent.propose(agent_input) for agent in self._agents)
+        # Deliberation loop
+        proposals: list[Proposal] = []
+        critique: Critique | None = None
+        reactions: list[Reaction] = []
+        feedback_items: list[FeedbackItem] = []
+
+        for round_num in range(1, max_rounds + 1):
+            context.current_round = round_num
+            round_info = RoundInfo(round=round_num, total_rounds=max_rounds)
+
+            # 1. DJ proposals (propose on round 1, revise on subsequent rounds)
+            if round_num == 1:
+                proposals = list(
+                    await asyncio.gather(
+                        *(agent.propose(agent_input) for agent in self._agents)
+                    )
+                )
+            else:
+                proposals = list(
+                    await asyncio.gather(
+                        *(agent.revise(agent_input, context) for agent in self._agents)
+                    )
+                )
+
+            # Add DJ messages to context
+            for p in proposals:
+                context.add(
+                    speaker=p.agent_name,
+                    role="dj",
+                    content=f"{p.summary} (perspective: {p.perspective})",
+                    data=p.model_dump(),
+                )
+
+            # 2. Critic + Audience feedback
+            feedback_results = await asyncio.gather(
+                self._critic.evaluate(critic_input),
+                *(a.react(audience_input) for a in self._audiences),
             )
-        )
+            critique = feedback_results[0]  # type: ignore[assignment]
+            reactions = [
+                r for r in feedback_results[1:] if isinstance(r, Reaction)
+            ]
 
-        # 3. Collect feedback in parallel
-        feedback_results = await asyncio.gather(
-            self._critic.evaluate(critic_input),
-            *(a.react(audience_input) for a in self._audiences),
-        )
-        critique: Critique = feedback_results[0]  # type: ignore[assignment]
-        reactions: list[Reaction] = [
-            r for r in feedback_results[1:] if isinstance(r, Reaction)
-        ]
-
-        # 4. Build feedback items for SSE
-        feedback_items = self._build_feedback_items(critique, reactions)
-
-        # 5. SSE: proposals
-        await self._bus.publish(
-            SSEEvent(
-                event=EVENT_PROPOSALS,
-                data={
-                    "round": round_info.round,
-                    "total_rounds": round_info.total_rounds,
-                    "proposals": [p.model_dump() for p in proposals],
-                },
+            # Add feedback to context
+            assert critique is not None
+            context.add(
+                speaker="critic",
+                role="critic",
+                content=f"{critique.issue} — {critique.suggestion}",
+                data=critique.model_dump(),
             )
-        )
+            for r in reactions:
+                context.add(
+                    speaker=r.audience_name,
+                    role="audience",
+                    content=f"{r.reaction} (energy_delta: {r.energy_delta:+.2f})",
+                    data=r.model_dump(),
+                )
 
-        # 6. SSE: feedback
-        await self._bus.publish(
-            SSEEvent(
-                event=EVENT_FEEDBACK,
-                data={
-                    "round": round_info.round,
-                    "total_rounds": round_info.total_rounds,
-                    "items": [fi.model_dump() for fi in feedback_items],
-                },
+            # 3. Build feedback items for SSE
+            feedback_items = self._build_feedback_items(critique, reactions)
+
+            # 4. SSE: proposals + feedback for this round
+            await self._bus.publish(
+                SSEEvent(
+                    event=EVENT_PROPOSALS,
+                    data={
+                        "round": round_info.round,
+                        "total_rounds": round_info.total_rounds,
+                        "proposals": [p.model_dump() for p in proposals],
+                    },
+                )
             )
-        )
+            await self._bus.publish(
+                SSEEvent(
+                    event=EVENT_FEEDBACK,
+                    data={
+                        "round": round_info.round,
+                        "total_rounds": round_info.total_rounds,
+                        "items": [fi.model_dump() for fi in feedback_items],
+                    },
+                )
+            )
 
-        # 7. Select the adopted proposal
+            logger.info(
+                "[deliberation] round=%d/%d proposals=%s",
+                round_num, max_rounds,
+                [p.agent_name for p in proposals],
+            )
+
+        # --- Post-deliberation: Decision and state update (once) ---
+        assert critique is not None
+        final_round_info = RoundInfo(round=max_rounds, total_rounds=max_rounds)
+
+        # 5. Select the adopted proposal
         decision = self._select(session, proposals, critique, reactions, profile)
 
-        # 8. Apply minor clamping if needed
+        # 6. Apply minor clamping if needed
         applied_params = decision.applied_params
         suppressions: list[str] = []
         if kind == "minor":
@@ -427,7 +472,7 @@ class Conductor:
                 rejections=decision.rejections,
             )
 
-        # 9. Build change summary
+        # 7. Build change summary
         change_summary = (
             f"{decision.adopted_proposal.agent_name}: "
             f"{decision.adopted_proposal.summary}"
@@ -435,14 +480,14 @@ class Conductor:
         if suppressions:
             change_summary += f" [minor: {', '.join(suppressions)}]"
 
-        # 10. SSE: decision (includes kind for UI)
+        # 8. SSE: decision
         await self._bus.publish(
             SSEEvent(
                 event=EVENT_DECISION,
                 data={
                     "kind": kind,
-                    "round": round_info.round,
-                    "total_rounds": round_info.total_rounds,
+                    "round": final_round_info.round,
+                    "total_rounds": final_round_info.total_rounds,
                     "adopted": decision.adopted_proposal.agent_name,
                     "reason": decision.reason,
                     "applied_params": applied_params.model_dump(),
@@ -451,13 +496,13 @@ class Conductor:
             )
         )
 
-        # 11. Update section state
+        # 9. Update section state
         new_section = self._update_section(
             session, kind, change_summary, applied_params,
             critique, reactions,
         )
 
-        # 12. Update session state
+        # 10. Update session state (once, after all rounds)
         updated = session.model_copy(
             update={
                 "current_params": applied_params,
@@ -470,15 +515,15 @@ class Conductor:
         )
         self._store.update(updated)
 
-        # 13. Apply to music backend
+        # 11. Apply to music backend
         await self._music.apply(updated.current_params)
 
-        # 14. SSE: state
+        # 12. SSE: state
         await self._bus.publish(
             SSEEvent(event=EVENT_STATE, data=updated.model_dump())
         )
 
-        # 15. Record intervention if user request was present
+        # 13. Record intervention
         if user_request_text:
             await self._memory.add_intervention(
                 InterventionRecord(
@@ -490,7 +535,7 @@ class Conductor:
                 )
             )
 
-        # 16. Log turn summary
+        # 14. Log turn summary
         prev_section = session.section.current_section
         new_section_name = new_section.current_section
         transition_str = (
@@ -499,17 +544,14 @@ class Conductor:
             else f"{prev_section}→{new_section_name} (hold)"
         )
         logger.info(
-            "[turn] kind=%s turn=%d section=%s adopted=%s reason=%s",
-            kind,
-            updated.turn_count,
-            transition_str,
-            decision.adopted_proposal.agent_name,
-            decision.reason[:80],
+            "[turn] kind=%s turn=%d rounds=%d section=%s adopted=%s",
+            kind, updated.turn_count, max_rounds,
+            transition_str, decision.adopted_proposal.agent_name,
         )
 
         return TurnResult(
             kind=kind,
-            round_info=round_info,
+            round_info=final_round_info,
             proposals=proposals,
             feedback=feedback_items,
             decision=decision,
