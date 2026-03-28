@@ -292,10 +292,14 @@ function HomeContent() {
     loading === "stopping"
       ? "Stopping..."
       : loading === "sending"
-        ? "Sending..."
+        ? "Sending request..."
         : loading === "turning"
           ? "Running turn..."
           : null;
+  const showBarOverlay = isBooting || (isBusy && !isBooting);
+  const barOverlayText = isBooting
+    ? (BOOT_STEPS[bootStep] || BOOT_STEPS[1])
+    : loadingLabel;
 
   return (
     <div className="app-container">
@@ -415,13 +419,13 @@ function HomeContent() {
           </div>
         ) : (
           <div className="control-bar">
-            {isBooting && (
+            {showBarOverlay && barOverlayText && (
               <div className="boot-overlay">
                 <span className="boot-spinner" />
-                <span className="boot-step">{BOOT_STEPS[bootStep] || BOOT_STEPS[1]}</span>
+                <span className="boot-step">{barOverlayText}</span>
               </div>
             )}
-            <div className={`control-bar-left ${isBooting ? "dimmed" : ""}`}>
+            <div className={`control-bar-left ${showBarOverlay ? "dimmed" : ""}`}>
               {!isRunning ? (
                 <button
                   className="header-button play-button"
@@ -457,7 +461,7 @@ function HomeContent() {
                 {!connected ? "Offline" : isRunning ? "Live" : "Ready"}
               </span>
             </div>
-            <div className={`control-bar-right ${isBooting ? "dimmed" : ""}`}>
+            <div className={`control-bar-right ${showBarOverlay ? "dimmed" : ""}`}>
               <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
               <LocaleSelector
                 current={locale}
@@ -469,9 +473,6 @@ function HomeContent() {
           </div>
         )}
         {error && <p className="error-message">{error}</p>}
-        {loadingLabel && !error && (
-          <p className="loading-message">{loadingLabel}</p>
-        )}
       </header>
 
       {/* Now Playing */}
