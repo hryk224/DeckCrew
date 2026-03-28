@@ -43,7 +43,6 @@ class LLMDJAgent:
         self._name = agent_name
         self._provider = provider
         self._mock = mock_fallback
-        self._system = load_system_prompt(agent_name)
         self._last_proposal: Proposal | None = None
 
     @property
@@ -51,10 +50,11 @@ class LLMDJAgent:
         return self._name
 
     async def propose(self, agent_input: AgentInput) -> Proposal:
+        system = load_system_prompt(self._name, agent_input.locale)
         user = build_dj_user_prompt(self._name, agent_input)
         try:
             result = await self._provider.complete(
-                self._system, user, Proposal
+                system, user, Proposal
             )
             if result.agent_name != self._name:
                 result = result.model_copy(update={"agent_name": self._name})
@@ -71,10 +71,11 @@ class LLMDJAgent:
 
         On failure, returns the Round 1 proposal (not a re-generation).
         """
+        system = load_system_prompt(self._name, agent_input.locale)
         user = build_dj_revise_prompt(self._name, agent_input, context)
         try:
             result = await self._provider.complete(
-                self._system, user, Proposal
+                system, user, Proposal
             )
             if result.agent_name != self._name:
                 result = result.model_copy(update={"agent_name": self._name})
@@ -93,17 +94,17 @@ class LLMCritic:
     def __init__(self, provider: LLMProvider, mock_fallback: CriticAgent) -> None:
         self._provider = provider
         self._mock = mock_fallback
-        self._system = load_system_prompt("critic")
 
     @property
     def name(self) -> str:
         return "critic"
 
     async def evaluate(self, critic_input: CriticInput) -> Critique:
+        system = load_system_prompt("critic", critic_input.locale)
         user = build_critic_user_prompt(critic_input)
         try:
             return await self._provider.complete(
-                self._system, user, Critique
+                system, user, Critique
             )
         except Exception:
             logger.warning("[llm] critic.evaluate() failed, using mock")
@@ -122,17 +123,17 @@ class LLMAudience:
         self._persona = persona
         self._provider = provider
         self._mock = mock_fallback
-        self._system = load_system_prompt("audience")
 
     @property
     def name(self) -> str:
         return self._persona.name
 
     async def react(self, audience_input: AudienceInput) -> Reaction:
+        system = load_system_prompt("audience", audience_input.locale)
         user = build_audience_user_prompt(audience_input, self._persona)
         try:
             result = await self._provider.complete(
-                self._system, user, Reaction
+                system, user, Reaction
             )
             # Ensure audience_name matches persona
             if result.audience_name != self._persona.name:

@@ -36,6 +36,18 @@ export async function updateGenreGroup(genreGroup: string): Promise<void> {
   }
 }
 
+export async function updateLocale(locale: string): Promise<void> {
+  const res = await fetch(`${API_URL}/session/params`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ locale }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`${res.status}: ${detail}`);
+  }
+}
+
 // --- Memory API ---
 
 export interface MemoryIntervention {

@@ -57,6 +57,7 @@ export interface SessionState {
   last_turn_kind?: ChangeKind | null;
   last_user_request: string | null;
   turn_count: number;
+  locale?: string;
 }
 
 export interface Proposal {

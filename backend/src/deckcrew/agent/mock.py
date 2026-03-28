@@ -1,6 +1,31 @@
 from deckcrew.agent.models import AgentInput, Proposal
 from deckcrew.state.models import MusicParams
 
+# Localized utterance text
+_TEXT: dict[str, dict[str, str]] = {
+    "groove_summary": {
+        "en": "Push the kick harder, raise tempo slightly for drive",
+        "ja": "キックをもっと前に出して、テンポ少し上げて攻めよう",
+    },
+    "harmony_summary": {
+        "en": "Widen the chord voicing, add floating pad layers",
+        "ja": "コードの広がりを出して、浮遊感のあるパッドを重ねたい",
+    },
+    "crowd_request": {
+        "en": "Audience wants: {request}",
+        "ja": "フロアの声: {request}",
+    },
+    "crowd_default": {
+        "en": "Current direction feels right, maintain the vibe",
+        "ja": "今の方向性はいい感じ、このまま維持しよう",
+    },
+}
+
+
+def _t(key: str, locale: str, **kwargs: str) -> str:
+    text = _TEXT[key].get(locale, _TEXT[key]["en"])
+    return text.format(**kwargs) if kwargs else text
+
 
 class MockGroove:
     """Groove agent: prioritizes rhythm, BPM, and danceability."""
@@ -15,7 +40,7 @@ class MockGroove:
         new_energy = min(params.energy + 0.1, 1.0)
         return Proposal(
             agent_name=self.name,
-            summary="Push the kick harder, raise tempo slightly for drive",
+            summary=_t("groove_summary", agent_input.locale),
             perspective="rhythmic momentum",
             suggested_params=MusicParams(
                 mood=params.mood,
@@ -42,7 +67,7 @@ class MockHarmony:
         texture = "wide" if params.texture == "layered" else "layered"
         return Proposal(
             agent_name=self.name,
-            summary="Widen the chord voicing, add floating pad layers",
+            summary=_t("harmony_summary", agent_input.locale),
             perspective="harmonic depth",
             suggested_params=MusicParams(
                 mood=params.mood,
@@ -70,7 +95,7 @@ class MockCrowd:
         if agent_input.user_request:
             return Proposal(
                 agent_name=self.name,
-                summary=f"Audience wants: {agent_input.user_request}",
+                summary=_t("crowd_request", agent_input.locale, request=agent_input.user_request),
                 perspective="user request",
                 suggested_params=MusicParams(
                     mood=params.mood,
@@ -83,7 +108,7 @@ class MockCrowd:
 
         return Proposal(
             agent_name=self.name,
-            summary="Current direction feels right, maintain the vibe",
+            summary=_t("crowd_default", agent_input.locale),
             perspective="audience reception",
             suggested_params=MusicParams(
                 mood=params.mood,

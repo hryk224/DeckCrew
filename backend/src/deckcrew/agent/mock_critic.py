@@ -1,5 +1,48 @@
 from deckcrew.agent.models import CriticInput, Critique
 
+_CRITIQUES: dict[str, dict[str, dict[str, str]]] = {
+    "early": {
+        "issue": {
+            "en": "Still warming up — let's see where this goes.",
+            "ja": "まだ序盤だ、もう少し様子を見よう。",
+        },
+        "suggestion": {
+            "en": "Give the set a few turns to develop.",
+            "ja": "数ターン回してからセットの方向性を判断する。",
+        },
+    },
+    "low_energy": {
+        "issue": {
+            "en": "The energy's been flat for a while now. The floor's losing interest.",
+            "ja": "エネルギーが停滞してる。フロアの関心が薄れてきた。",
+        },
+        "suggestion": {
+            "en": "Push the energy up — try a bigger shift or a tempo change.",
+            "ja": "もっとエネルギーを上げろ。大きめの変化かテンポチェンジを試せ。",
+        },
+    },
+    "slow_tempo": {
+        "issue": {
+            "en": "The tempo's been dragging. It's starting to feel sluggish.",
+            "ja": "テンポが重い。もたつき始めてる。",
+        },
+        "suggestion": {
+            "en": "Pick up the pace. A BPM bump would break the monotony.",
+            "ja": "ペースを上げろ。BPM を上げて単調さを壊せ。",
+        },
+    },
+    "good": {
+        "issue": {
+            "en": "The set's moving nicely. No complaints from me.",
+            "ja": "セットはうまく流れてる。文句なし。",
+        },
+        "suggestion": {
+            "en": "Keep the momentum going.",
+            "ja": "この勢いを維持しろ。",
+        },
+    },
+}
+
 
 class MockCritic:
     """Mock Critic agent that evaluates session flow.
@@ -22,30 +65,19 @@ class MockCritic:
     async def evaluate(self, critic_input: CriticInput) -> Critique:
         params = critic_input.current_params
         turn = critic_input.turn_count
+        loc = critic_input.locale
 
         if turn < 1:
-            return Critique(
-                issue="Still warming up — let's see where this goes.",
-                severity="low",
-                suggestion="Give the set a few turns to develop.",
-            )
+            c = _CRITIQUES["early"]
+            return Critique(issue=c["issue"].get(loc, c["issue"]["en"]), severity="low", suggestion=c["suggestion"].get(loc, c["suggestion"]["en"]))
 
         if turn >= 3 and params.energy <= 0.55:
-            return Critique(
-                issue="The energy's been flat for a while now. The floor's losing interest.",
-                severity="medium",
-                suggestion="Push the energy up — try a bigger shift or a tempo change.",
-            )
+            c = _CRITIQUES["low_energy"]
+            return Critique(issue=c["issue"].get(loc, c["issue"]["en"]), severity="medium", suggestion=c["suggestion"].get(loc, c["suggestion"]["en"]))
 
         if turn >= 3 and params.bpm <= 118:
-            return Critique(
-                issue="The tempo's been dragging. It's starting to feel sluggish.",
-                severity="medium",
-                suggestion="Pick up the pace. A BPM bump would break the monotony.",
-            )
+            c = _CRITIQUES["slow_tempo"]
+            return Critique(issue=c["issue"].get(loc, c["issue"]["en"]), severity="medium", suggestion=c["suggestion"].get(loc, c["suggestion"]["en"]))
 
-        return Critique(
-            issue="The set's moving nicely. No complaints from me.",
-            severity="low",
-            suggestion="Keep the momentum going.",
-        )
+        c = _CRITIQUES["good"]
+        return Critique(issue=c["issue"].get(loc, c["issue"]["en"]), severity="low", suggestion=c["suggestion"].get(loc, c["suggestion"]["en"]))

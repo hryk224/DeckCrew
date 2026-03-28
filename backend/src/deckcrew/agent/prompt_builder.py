@@ -1,13 +1,11 @@
 """Prompt construction for LLM-backed agents.
 
-System prompts are loaded from Markdown files in agent/prompts/.
+System prompts are loaded from Markdown files in agent/prompts/<locale>/.
 User prompts are built dynamically from session state.
 
 Locale switching:
-  Currently English only. To add another language:
-  1. Create agent/prompts/<locale>/ with the same filenames
-  2. Set PROMPT_LOCALE=<locale> environment variable
-  3. _load_system_prompt() will read from the locale subdirectory
+  Prompts are organized as agent/prompts/<locale>/<name>.md.
+  Falls back to agent/prompts/<name>.md (legacy) then to en/ if not found.
 """
 
 from __future__ import annotations
@@ -27,14 +25,24 @@ if TYPE_CHECKING:
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
-@functools.lru_cache(maxsize=16)
-def load_system_prompt(name: str) -> str:
-    """Load a system prompt from agent/prompts/<name>.md.
+@functools.lru_cache(maxsize=32)
+def load_system_prompt(name: str, locale: str = "en") -> str:
+    """Load a system prompt from agent/prompts/<locale>/<name>.md.
 
-    Cached after first read. All file I/O is centralized here.
+    Falls back to agent/prompts/<name>.md (legacy) then en/ if locale
+    subdirectory is missing. Cached after first read.
     """
-    path = _PROMPTS_DIR / f"{name}.md"
-    return path.read_text(encoding="utf-8").strip()
+    # Try locale subdirectory first
+    locale_path = _PROMPTS_DIR / locale / f"{name}.md"
+    if locale_path.exists():
+        return locale_path.read_text(encoding="utf-8").strip()
+    # Fall back to legacy flat path
+    flat_path = _PROMPTS_DIR / f"{name}.md"
+    if flat_path.exists():
+        return flat_path.read_text(encoding="utf-8").strip()
+    # Fall back to en/
+    en_path = _PROMPTS_DIR / "en" / f"{name}.md"
+    return en_path.read_text(encoding="utf-8").strip()
 
 
 # --- DJ agents ---

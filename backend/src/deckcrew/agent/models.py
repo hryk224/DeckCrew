@@ -12,6 +12,7 @@ class AgentInput(BaseModel):
     current_params: MusicParams
     last_change: str | None = None
     user_request: str | None = None
+    locale: str = "en"
 
 
 class Proposal(BaseModel):
@@ -34,6 +35,7 @@ class CriticInput(BaseModel):
     current_params: MusicParams
     last_change: str | None = None
     turn_count: int = 0
+    locale: str = "en"
 
 
 class Critique(BaseModel):
@@ -54,6 +56,7 @@ class AudienceInput(BaseModel):
     last_change: str | None = None
     turn_count: int = 0
     venue: VenueContext | None = None
+    locale: str = "en"
 
 
 class Reaction(BaseModel):

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   getPreviewScenario,
   getTimelineScenario,
+  type Locale,
   type PreviewScenario,
   type TimelineScenario,
 } from "@/lib/previewData";
@@ -42,7 +43,7 @@ export type PreviewState = SnapshotPreview | TimelinePreview | null;
  * - `?preview=timeline-house-party` → timeline preview with step nav
  * - No `preview` param → null (normal SSE mode)
  */
-export function usePreview(): PreviewState {
+export function usePreview(locale: Locale = "en"): PreviewState {
   const params = useSearchParams();
   const name = params.get("preview");
   const [stepIndex, setStepIndex] = useState(0);
@@ -66,7 +67,7 @@ export function usePreview(): PreviewState {
   if (!name) return null;
 
   // Check timeline first (timeline-* prefix)
-  const timeline = getTimelineScenario(name);
+  const timeline = getTimelineScenario(name, locale);
   if (timeline) {
     const totalSteps = timeline.steps.length;
     const safeIndex = Math.min(stepIndex, totalSteps - 1);
@@ -86,7 +87,7 @@ export function usePreview(): PreviewState {
   }
 
   // Fall back to single-shot scenario
-  const scenario = getPreviewScenario(name);
+  const scenario = getPreviewScenario(name, locale);
   if (!scenario) return null;
 
   return { kind: "snapshot", scenario };

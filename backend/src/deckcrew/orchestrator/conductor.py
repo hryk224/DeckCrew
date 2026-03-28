@@ -352,21 +352,26 @@ class Conductor:
         profile = await self._memory.get_profile()
         context = MeetingContext(current_round=1, total_rounds=max_rounds, mode=dialogue_mode)
 
+        locale = session.locale
+
         agent_input = AgentInput(
             current_params=session.current_params,
             last_change=session.last_change,
             user_request=session.last_user_request,
+            locale=locale,
         )
         critic_input = CriticInput(
             current_params=session.current_params,
             last_change=session.last_change,
             turn_count=session.turn_count,
+            locale=locale,
         )
         audience_input = AudienceInput(
             current_params=session.current_params,
             last_change=session.last_change,
             turn_count=session.turn_count,
             venue=session.venue,
+            locale=locale,
         )
 
         # Deliberation loop

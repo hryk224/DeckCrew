@@ -1,11 +1,13 @@
 "use client";
 
 import { Suspense, useCallback, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   startSession,
   submitRequest,
   runTurn,
   updateGenreGroup,
+  updateLocale,
   fetchInterventions,
   fetchProfile,
   clearMemory,
@@ -14,6 +16,7 @@ import {
 } from "@/lib/api";
 import { SCENARIO_NAMES, TIMELINE_NAMES } from "@/lib/previewData";
 import { THEMES } from "@/lib/themes";
+import type { Locale } from "@/lib/previewData";
 import { usePreview, type PreviewState } from "@/lib/usePreview";
 import { useSessionStream } from "@/lib/useSessionStream";
 import { useTheme } from "@/lib/useTheme";
@@ -110,14 +113,29 @@ export default function Home() {
   );
 }
 
+function buildPreviewHref(preview: string, theme: string, locale: Locale): string {
+  let href = `?preview=${preview}`;
+  if (theme !== "tokyo-night") href += `&theme=${theme}`;
+  if (locale !== "en") href += `&locale=${locale}`;
+  return href;
+}
+
 function previewScenarioData(state: PreviewState) {
   if (!state) return null;
   if (state.kind === "snapshot") return state.scenario;
   return state.current;
 }
 
+function useInitialLocale(): Locale {
+  const params = useSearchParams();
+  const raw = params.get("locale");
+  return raw === "ja" ? "ja" : "en";
+}
+
 function HomeContent() {
-  const previewState = usePreview();
+  const initialLocale = useInitialLocale();
+  const [locale, setLocale] = useState<Locale>(initialLocale);
+  const previewState = usePreview(locale);
   const [currentTheme, setTheme] = useTheme();
   const stream = useSessionStream({ enabled: !previewState });
 
@@ -129,6 +147,16 @@ function HomeContent() {
   const decision = previewData ? previewData.decision : stream.decision;
   const connected = previewState ? true : stream.connected;
   const reset = stream.reset;
+
+  // Sync locale from backend session state (dynamic mode)
+  const sessionLocale = stream.session?.locale;
+  const prevSessionLocaleRef = useRef(sessionLocale);
+  if (sessionLocale && sessionLocale !== prevSessionLocaleRef.current) {
+    prevSessionLocaleRef.current = sessionLocale;
+    if ((sessionLocale === "en" || sessionLocale === "ja") && sessionLocale !== locale) {
+      setLocale(sessionLocale as Locale);
+    }
+  }
 
   const [requestText, setRequestText] = useState("");
   const [loading, setLoading] = useState<LoadingState>(null);
@@ -275,7 +303,7 @@ function HomeContent() {
                 return (
                   <a
                     key={s}
-                    href={`?preview=${s}${currentTheme !== "tokyo-night" ? `&theme=${currentTheme}` : ""}`}
+                    href={buildPreviewHref(s, currentTheme, locale)}
                     className={`preview-link ${s === activeName ? "active" : ""}`}
                   >
                     {s}
@@ -295,7 +323,7 @@ function HomeContent() {
                 return (
                   <a
                     key={s}
-                    href={`?preview=${s}${currentTheme !== "tokyo-night" ? `&theme=${currentTheme}` : ""}`}
+                    href={buildPreviewHref(s, currentTheme, locale)}
                     className={`preview-link ${s === activeName ? "active" : ""}`}
                   >
                     {s.replace("timeline-", "")}
@@ -314,7 +342,7 @@ function HomeContent() {
                 return (
                   <a
                     key={t.id}
-                    href={`?preview=${currentPreviewName}${t.id !== "tokyo-night" ? `&theme=${t.id}` : ""}`}
+                    href={buildPreviewHref(currentPreviewName, t.id, locale)}
                     className={`preview-link ${t.id === currentTheme ? "active" : ""}`}
                   >
                     {t.label}
@@ -357,7 +385,15 @@ function HomeContent() {
         {loadingLabel && !error && (
           <p className="loading-message">{loadingLabel}</p>
         )}
-        <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
+        <div className="header-selectors">
+          <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
+          <LocaleSelector
+            current={locale}
+            disabled={!isRunning && !previewState}
+            isPreview={!!previewState}
+            onSelect={setLocale}
+          />
+        </div>
       </header>
 
       {/* Now Playing */}
@@ -613,6 +649,51 @@ function HomeContent() {
 
       {/* Memory (debug panel, hidden in preview mode) */}
       {!previewState && <MemoryPanel />}
+    </div>
+  );
+}
+
+function LocaleSelector({
+  current,
+  disabled,
+  isPreview,
+  onSelect,
+}: {
+  current: Locale;
+  disabled: boolean;
+  isPreview: boolean;
+  onSelect: (locale: Locale) => void;
+}) {
+  const [updating, setUpdating] = useState(false);
+
+  async function handleSelect(loc: Locale) {
+    if (loc === current || (disabled && !isPreview) || updating) return;
+    onSelect(loc);
+    if (!isPreview) {
+      setUpdating(true);
+      try {
+        await updateLocale(loc);
+      } catch {
+        // SSE will reflect actual state
+      } finally {
+        setUpdating(false);
+      }
+    }
+  }
+
+  return (
+    <div className="locale-selector">
+      {(["en", "ja"] as const).map((loc) => (
+        <button
+          key={loc}
+          type="button"
+          className={`locale-chip ${loc === current ? "active" : ""}`}
+          disabled={disabled && !isPreview}
+          onClick={() => handleSelect(loc)}
+        >
+          {loc.toUpperCase()}
+        </button>
+      ))}
     </div>
   );
 }

@@ -97,6 +97,7 @@ class MockPersonaAudience:
     async def react(self, audience_input: AudienceInput) -> Reaction:
         params = audience_input.current_params
         p = self._persona
+        loc = audience_input.locale
 
         # Adjust preferences for venue, or use raw persona values
         if audience_input.venue:
@@ -114,8 +115,13 @@ class MockPersonaAudience:
         energy_gap = pref_energy - params.energy
         bpm_gap = abs(params.bpm - pref_bpm)
 
-        # Persona-specific voice lines
-        lines = _PERSONA_LINES.get(p.name, _DEFAULT_LINES)
+        # Persona-specific voice lines (locale-aware)
+        raw_lines = _PERSONA_LINES.get(p.name, _DEFAULT_LINES)
+        lines = {k: v.get(loc, v["en"]) for k, v in raw_lines.items()}
+
+        def _reason(key: str, **kwargs: object) -> str:
+            tpl = _REASONS[key]
+            return tpl.get(loc, tpl["en"]).format(**kwargs)
 
         # High change sensitivity + stale session = boredom
         if (
@@ -127,9 +133,7 @@ class MockPersonaAudience:
                 audience_name=self.name,
                 reaction=lines["bored"],
                 energy_delta=round(0.2 * density_mult, 2),
-                reason=(
-                    f"{p.label} craves change but nothing shifted recently"
-                ),
+                reason=_reason("bored", label=p.label),
             )
 
         # Energy too low for this persona
@@ -139,10 +143,7 @@ class MockPersonaAudience:
                 audience_name=self.name,
                 reaction=lines["low_energy"],
                 energy_delta=round(delta, 2),
-                reason=(
-                    f"{p.label} prefers energy around "
-                    f"{pref_energy:.0%}, currently too low"
-                ),
+                reason=_reason("low_energy", label=p.label, energy=f"{pref_energy:.0%}"),
             )
 
         # Energy too high for this persona
@@ -152,10 +153,7 @@ class MockPersonaAudience:
                 audience_name=self.name,
                 reaction=lines["high_energy"],
                 energy_delta=round(delta, 2),
-                reason=(
-                    f"{p.label} prefers energy around "
-                    f"{pref_energy:.0%}, currently too high"
-                ),
+                reason=_reason("high_energy", label=p.label, energy=f"{pref_energy:.0%}"),
             )
 
         # BPM far from preference
@@ -167,10 +165,7 @@ class MockPersonaAudience:
                 energy_delta=round(
                     (-0.1 if direction == "fast" else 0.1) * density_mult, 2
                 ),
-                reason=(
-                    f"{p.label} prefers around {pref_bpm} BPM, "
-                    f"current {params.bpm} is {bpm_gap} off"
-                ),
+                reason=_reason("bpm_off", label=p.label, pref_bpm=pref_bpm, bpm=params.bpm, gap=bpm_gap),
             )
 
         # Comfortable zone
@@ -178,44 +173,53 @@ class MockPersonaAudience:
             audience_name=self.name,
             reaction=lines["happy"],
             energy_delta=0.0,
-            reason=f"{p.label} is comfortable with the current vibe",
+            reason=_reason("happy", label=p.label),
         )
 
 
-# Persona-specific voice lines for conversational tone
-_PERSONA_LINES: dict[str, dict[str, str]] = {
+# Persona-specific voice lines per locale
+_PERSONA_LINES: dict[str, dict[str, dict[str, str]]] = {
     "clubber": {
-        "bored": "Yo, switch it up! This floor's going dead.",
-        "low_energy": "C'mon, turn it up! We came here to dance!",
-        "high_energy": "Whoa, even I need a breather... ease off a bit.",
-        "too_fast": "The tempo's wild, I can't keep up!",
-        "too_slow": "Pick up the pace, let's get moving!",
-        "happy": "Yeah, this is it! Keep it rolling!",
+        "bored": {"en": "Yo, switch it up! This floor's going dead.", "ja": "おい、なんか変えてくれ！フロア冷めてきてるぞ！"},
+        "low_energy": {"en": "C'mon, turn it up! We came here to dance!", "ja": "もっと上げてくれよ！踊りに来たんだから！"},
+        "high_energy": {"en": "Whoa, even I need a breather... ease off a bit.", "ja": "うわ、さすがにちょっと休憩…少し落としてくれ。"},
+        "too_fast": {"en": "The tempo's wild, I can't keep up!", "ja": "テンポ速すぎ、ついていけない！"},
+        "too_slow": {"en": "Pick up the pace, let's get moving!", "ja": "もっとペース上げて、動きたいんだよ！"},
+        "happy": {"en": "Yeah, this is it! Keep it rolling!", "ja": "最高！このまま回し続けてくれ！"},
     },
     "chiller": {
-        "bored": "Hmm, I wouldn't mind a little change of scenery.",
-        "low_energy": "Could use a touch more warmth, actually.",
-        "high_energy": "Whoa, way too much... I need some space to breathe.",
-        "too_fast": "This is rushing... can we slow it down?",
-        "too_slow": "The pace is fine, but a little more movement would be nice.",
-        "happy": "This is perfect. Just floating along.",
+        "bored": {"en": "Hmm, I wouldn't mind a little change of scenery.", "ja": "うーん、ちょっと景色が変わってもいいかな。"},
+        "low_energy": {"en": "Could use a touch more warmth, actually.", "ja": "もう少し温かみがあるといいんだけど。"},
+        "high_energy": {"en": "Whoa, way too much... I need some space to breathe.", "ja": "うわ、ちょっと激しすぎ…息つく隙間がほしい。"},
+        "too_fast": {"en": "This is rushing... can we slow it down?", "ja": "急ぎすぎてない？もう少しゆっくりでいいよ。"},
+        "too_slow": {"en": "The pace is fine, but a little more movement would be nice.", "ja": "ペースは悪くないけど、もう少し動きがほしいかな。"},
+        "happy": {"en": "This is perfect. Just floating along.", "ja": "これ最高。ずっとこのまま漂っていたい。"},
     },
     "explorer": {
-        "bored": "We've been here before. Show me something I haven't heard.",
-        "low_energy": "Interesting direction, but it needs more push.",
-        "high_energy": "The energy's great, but let's try something unexpected.",
-        "too_fast": "Fast is fine, but it's getting predictable at this tempo.",
-        "too_slow": "Slow can work if it goes somewhere new.",
-        "happy": "Ooh, I like where this is going. Keep exploring.",
+        "bored": {"en": "We've been here before. Show me something I haven't heard.", "ja": "この展開、前にも聴いたよ。まだ聴いたことない音を聴かせて。"},
+        "low_energy": {"en": "Interesting direction, but it needs more push.", "ja": "面白い方向だけど、もうひと押し欲しい。"},
+        "high_energy": {"en": "The energy's great, but let's try something unexpected.", "ja": "エネルギーはいいけど、もっと予想外の展開が欲しい。"},
+        "too_fast": {"en": "Fast is fine, but it's getting predictable at this tempo.", "ja": "速いのはいいけど、このテンポだとワンパターンになりそう。"},
+        "too_slow": {"en": "Slow can work if it goes somewhere new.", "ja": "遅くても新しいところに行くならアリ。"},
+        "happy": {"en": "Ooh, I like where this is going. Keep exploring.", "ja": "おっ、この展開いいね。もっと攻めて。"},
     },
 }
 
-_DEFAULT_LINES: dict[str, str] = {
-    "bored": "Getting bored, want something new.",
-    "low_energy": "Needs more energy!",
-    "high_energy": "Too intense, dial it back.",
-    "too_fast": "Tempo feels too fast.",
-    "too_slow": "Tempo feels too slow.",
-    "happy": "Enjoying this.",
+_DEFAULT_LINES: dict[str, dict[str, str]] = {
+    "bored": {"en": "Getting bored, want something new.", "ja": "飽きてきた、何か新しいの頼む。"},
+    "low_energy": {"en": "Needs more energy!", "ja": "もっとエネルギーが欲しい！"},
+    "high_energy": {"en": "Too intense, dial it back.", "ja": "激しすぎ、少し落として。"},
+    "too_fast": {"en": "Tempo feels too fast.", "ja": "テンポが速すぎる。"},
+    "too_slow": {"en": "Tempo feels too slow.", "ja": "テンポが遅すぎる。"},
+    "happy": {"en": "Enjoying this.", "ja": "いい感じ。"},
+}
+
+# Reason templates per locale
+_REASONS: dict[str, dict[str, str]] = {
+    "bored": {"en": "{label} craves change but nothing shifted recently", "ja": "{label} は変化を求めているが、最近動きがない"},
+    "low_energy": {"en": "{label} prefers energy around {energy}, currently too low", "ja": "{label} の好みは energy {energy} 付近、今は低すぎる"},
+    "high_energy": {"en": "{label} prefers energy around {energy}, currently too high", "ja": "{label} の好みは energy {energy} 付近、今は高すぎる"},
+    "bpm_off": {"en": "{label} prefers around {pref_bpm} BPM, current {bpm} is {gap} off", "ja": "{label} の好みは {pref_bpm} BPM 付近、現在 {bpm} で {gap} 離れている"},
+    "happy": {"en": "{label} is comfortable with the current vibe", "ja": "{label} は今の雰囲気に満足している"},
 }
 

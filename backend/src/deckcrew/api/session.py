@@ -62,30 +62,47 @@ async def submit_request(body: UserRequest) -> SessionState:
     return updated
 
 
+_SUPPORTED_LOCALES = {"en", "ja"}
+
+
 class ParamsUpdate(BaseModel):
     """Partial update for session params."""
 
     genre_group: str | None = None
+    locale: str | None = None
 
 
 @router.patch("/params", response_model=SessionState)
 async def update_params(body: ParamsUpdate) -> SessionState:
-    """Partially update session params (e.g. genre_group)."""
+    """Partially update session params (e.g. genre_group, locale)."""
     session = session_store.get_active()
     if session is None:
         raise HTTPException(status_code=404, detail="No active session")
     if session.status != "running":
         raise HTTPException(status_code=400, detail="Session is not running")
+
+    updates: dict[str, object] = {}
+
     if body.genre_group is not None:
         if body.genre_group not in GROUPS_BY_ID:
             raise HTTPException(
                 status_code=400,
                 detail=f"Unknown genre_group: {body.genre_group}",
             )
-        new_params = session.current_params.model_copy(
+        updates["current_params"] = session.current_params.model_copy(
             update={"genre_group": body.genre_group},
         )
-        updated = session.model_copy(update={"current_params": new_params})
+
+    if body.locale is not None:
+        if body.locale not in _SUPPORTED_LOCALES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported locale: {body.locale}",
+            )
+        updates["locale"] = body.locale
+
+    if updates:
+        updated = session.model_copy(update=updates)
         session_store.update(updated)
         await event_bus.publish(
             SSEEvent(event=EVENT_STATE, data=updated.model_dump())
