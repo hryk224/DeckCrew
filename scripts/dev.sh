@@ -143,13 +143,19 @@ cmd_restart() {
 
 cmd_preview() {
   local scenario="${1:-}"
-  local scenarios="idle build-major peak-with-feedback crowd-requested-shift"
+  local snapshots="idle build-major peak-with-feedback crowd-requested-shift"
+  local timelines="timeline-house-party timeline-chill-lounge timeline-open-format-debate"
 
   if [ -z "$scenario" ]; then
     echo "Usage: scripts/dev.sh preview <scenario>"
     echo ""
-    echo "Available scenarios:"
-    for s in $scenarios; do
+    echo "Snapshots (single state):"
+    for s in $snapshots; do
+      echo "  $s  ->  http://localhost:$FE_PORT/?preview=$s"
+    done
+    echo ""
+    echo "Timelines (multi-turn experience):"
+    for s in $timelines; do
       echo "  $s  ->  http://localhost:$FE_PORT/?preview=$s"
     done
     return

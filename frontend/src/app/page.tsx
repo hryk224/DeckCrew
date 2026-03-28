@@ -11,9 +11,9 @@ import {
   type MemoryIntervention,
   type MemoryProfile,
 } from "@/lib/api";
-import { SCENARIO_NAMES } from "@/lib/previewData";
+import { SCENARIO_NAMES, TIMELINE_NAMES } from "@/lib/previewData";
 import { THEMES } from "@/lib/themes";
-import { usePreview } from "@/lib/usePreview";
+import { usePreview, type PreviewState } from "@/lib/usePreview";
 import { useSessionStream } from "@/lib/useSessionStream";
 import { useTheme } from "@/lib/useTheme";
 import type {
@@ -69,17 +69,24 @@ export default function Home() {
   );
 }
 
+function previewScenarioData(state: PreviewState) {
+  if (!state) return null;
+  if (state.kind === "snapshot") return state.scenario;
+  return state.current;
+}
+
 function HomeContent() {
-  const preview = usePreview();
+  const previewState = usePreview();
   const currentTheme = useTheme();
-  const stream = useSessionStream({ enabled: !preview });
+  const stream = useSessionStream({ enabled: !previewState });
 
   // In preview mode, use fixture data; otherwise use SSE stream
-  const session = preview ? preview.session : stream.session;
-  const proposals = preview ? preview.proposals : stream.proposals;
-  const feedback = preview ? preview.feedback : stream.feedback;
-  const decision = preview ? preview.decision : stream.decision;
-  const connected = preview ? true : stream.connected;
+  const previewData = previewScenarioData(previewState);
+  const session = previewData ? previewData.session : stream.session;
+  const proposals = previewData ? previewData.proposals : stream.proposals;
+  const feedback = previewData ? previewData.feedback : stream.feedback;
+  const decision = previewData ? previewData.decision : stream.decision;
+  const connected = previewState ? true : stream.connected;
   const reset = stream.reset;
 
   const [requestText, setRequestText] = useState("");
@@ -168,31 +175,105 @@ function HomeContent() {
           <span className={`record-dot ${isRunning ? "spinning" : ""}`} />
         </div>
 
-        {preview ? (
+        {previewState ? (
           <div className="preview-banner">
             <span className="preview-label">Preview</span>
-            <span className="preview-scenario">{preview.name}</span>
-            <div className="preview-nav">
-              {SCENARIO_NAMES.map((s) => (
-                <a
-                  key={s}
-                  href={`?preview=${s}${currentTheme !== "tokyo-night" ? `&theme=${currentTheme}` : ""}`}
-                  className={`preview-link ${s === preview.name ? "active" : ""}`}
+            <span className="preview-scenario">
+              {previewState.kind === "timeline"
+                ? previewState.timeline.name
+                : previewState.scenario.name}
+            </span>
+
+            {/* Timeline step navigation */}
+            {previewState.kind === "timeline" && (
+              <div className="timeline-nav">
+                <button
+                  type="button"
+                  className="timeline-nav-button"
+                  disabled={!previewState.hasPrev}
+                  onClick={previewState.goToPrev}
                 >
-                  {s}
-                </a>
-              ))}
+                  ◀ Prev
+                </button>
+                <div className="timeline-steps">
+                  {previewState.timeline.steps.map((step, i) => (
+                    <span
+                      key={step.label}
+                      className={`timeline-step-dot ${i === previewState.stepIndex ? "active" : ""} ${i < previewState.stepIndex ? "visited" : ""}`}
+                      title={step.label}
+                    >
+                      {step.label}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="timeline-nav-button"
+                  disabled={!previewState.hasNext}
+                  onClick={previewState.goToNext}
+                >
+                  Next ▶
+                </button>
+              </div>
+            )}
+
+            {/* Snapshot scenarios */}
+            <div className="preview-nav">
+              <span className="preview-nav-group-label">Snapshots</span>
+              {SCENARIO_NAMES.map((s) => {
+                const activeName =
+                  previewState.kind === "snapshot"
+                    ? previewState.scenario.name
+                    : "";
+                return (
+                  <a
+                    key={s}
+                    href={`?preview=${s}${currentTheme !== "tokyo-night" ? `&theme=${currentTheme}` : ""}`}
+                    className={`preview-link ${s === activeName ? "active" : ""}`}
+                  >
+                    {s}
+                  </a>
+                );
+              })}
             </div>
+
+            {/* Timeline scenarios */}
             <div className="preview-nav">
-              {THEMES.map((t) => (
-                <a
-                  key={t.id}
-                  href={`?preview=${preview.name}${t.id !== "tokyo-night" ? `&theme=${t.id}` : ""}`}
-                  className={`preview-link ${t.id === currentTheme ? "active" : ""}`}
-                >
-                  {t.label}
-                </a>
-              ))}
+              <span className="preview-nav-group-label">Timelines</span>
+              {TIMELINE_NAMES.map((s) => {
+                const activeName =
+                  previewState.kind === "timeline"
+                    ? previewState.timeline.name
+                    : "";
+                return (
+                  <a
+                    key={s}
+                    href={`?preview=${s}${currentTheme !== "tokyo-night" ? `&theme=${currentTheme}` : ""}`}
+                    className={`preview-link ${s === activeName ? "active" : ""}`}
+                  >
+                    {s.replace("timeline-", "")}
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Theme switcher */}
+            <div className="preview-nav">
+              {THEMES.map((t) => {
+                const currentPreviewName =
+                  previewState.kind === "timeline"
+                    ? previewState.timeline.name
+                    : previewState.scenario.name;
+                return (
+                  <a
+                    key={t.id}
+                    href={`?preview=${currentPreviewName}${t.id !== "tokyo-night" ? `&theme=${t.id}` : ""}`}
+                    className={`preview-link ${t.id === currentTheme ? "active" : ""}`}
+                  >
+                    {t.label}
+                  </a>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -456,7 +537,7 @@ function HomeContent() {
       </section>
 
       {/* Request (hidden in preview mode) */}
-      {!preview && (
+      {!previewState && (
         <section className="section">
           <h2 className="section-label">Request</h2>
           <div className="request-form">
@@ -483,7 +564,7 @@ function HomeContent() {
       )}
 
       {/* Memory (debug panel, hidden in preview mode) */}
-      {!preview && <MemoryPanel />}
+      {!previewState && <MemoryPanel />}
     </div>
   );
 }
