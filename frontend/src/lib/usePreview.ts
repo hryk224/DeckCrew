@@ -43,9 +43,12 @@ export type PreviewState = SnapshotPreview | TimelinePreview | null;
  * - `?preview=timeline-house-party` → timeline preview with step nav
  * - No `preview` param → null (normal SSE mode)
  */
+const _IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+const _DEMO_DEFAULT = "timeline-house-party";
+
 export function usePreview(locale: Locale = "en"): PreviewState {
   const params = useSearchParams();
-  const name = params.get("preview");
+  const name = params.get("preview") || (_IS_DEMO ? _DEMO_DEFAULT : null);
   const [stepIndex, setStepIndex] = useState(0);
   const prevNameRef = useRef(name);
 

@@ -2,6 +2,8 @@
 
 Autonomous AI DJs that debate, adapt, and direct real-time music generation.
 
+[Live Demo](https://hryk224.github.io/DeckCrew/)
+
 ## Features
 
 - **AI DJ Meeting** — Three DJ agents (Groove, Harmony, Crowd) propose, debate, and negotiate music direction in real time

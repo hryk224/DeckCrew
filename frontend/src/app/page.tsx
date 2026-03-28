@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   startSession,
@@ -29,6 +29,10 @@ import type {
 } from "@/types/session";
 
 type LoadingState = null | "starting" | "stopping" | "sending" | "turning";
+
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+const DEMO_DEFAULT_PREVIEW = "timeline-house-party";
+const DEMO_AUTO_INTERVAL = 5000; // 5 seconds
 
 const BOOT_STEPS = [
   "",
@@ -146,7 +150,18 @@ function HomeContent() {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const previewState = usePreview(locale);
   const [currentTheme, setTheme] = useTheme();
-  const stream = useSessionStream({ enabled: !previewState });
+  const stream = useSessionStream({ enabled: !previewState && !IS_DEMO });
+
+  // Demo mode: auto-advance timeline steps
+  useEffect(() => {
+    if (!IS_DEMO) return;
+    if (!previewState || previewState.kind !== "timeline") return;
+    if (!previewState.hasNext) return;
+    const timer = setInterval(() => {
+      previewState.goToNext();
+    }, DEMO_AUTO_INTERVAL);
+    return () => clearInterval(timer);
+  }, [previewState]);
 
   // In preview mode, use fixture data; otherwise use SSE stream
   const previewData = previewScenarioData(previewState);
@@ -415,6 +430,21 @@ function HomeContent() {
                   </a>
                 );
               })}
+            </div>
+          </div>
+        ) : IS_DEMO ? (
+          <div className="control-bar">
+            <div className="control-bar-left">
+              <span className="status-led ready">Demo</span>
+            </div>
+            <div className="control-bar-right">
+              <ThemeSelector currentTheme={currentTheme} onSelect={setTheme} />
+              <LocaleSelector
+                current={locale}
+                disabled={false}
+                isPreview={true}
+                onSelect={setLocale}
+              />
             </div>
           </div>
         ) : (
