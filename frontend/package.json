@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "next": "16.1.7",
@@ -13,9 +16,17 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "16.1.7",
+    "@testing-library/react": "16.3.2",
     "@types/node": "22.19.11",
     "@types/react": "19.2.10",
     "@types/react-dom": "19.2.1",
-    "typescript": "5.8.3"
+    "eslint": "9.39.4",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "globals": "16.4.0",
+    "jsdom": "29.0.0",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.57.1",
+    "vitest": "4.1.1"
   }
 }

@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "format:md": "prettier --write \"**/*.md\" \"!**/node_modules/**\"",
+    "lint": "npm run lint --prefix frontend",
+    "typecheck": "npm run typecheck --prefix frontend",
+    "test": "npm run test --prefix frontend",
     "dev:start": "bash scripts/dev.sh start",
     "dev:stop": "bash scripts/dev.sh stop",
     "dev:restart": "bash scripts/dev.sh restart",
