@@ -31,7 +31,6 @@ import type {
 type LoadingState = null | "starting" | "stopping" | "sending" | "turning";
 
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-const DEMO_DEFAULT_PREVIEW = "timeline-house-party";
 const DEMO_AUTO_INTERVAL = 5000; // 5 seconds
 
 const BOOT_STEPS = [
@@ -192,7 +191,7 @@ function HomeContent() {
   const isBusy = loading !== null;
   const isBooting = loading === "starting";
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
-  const audio = useAudio({
+  useAudio({
     enabled: isRunning && !previewState,
     volume,
     audioContext: audioCtx,
@@ -737,7 +736,11 @@ function HomeContent() {
       </section>
 
       {/* Decision */}
-      <DecisionSection decision={decision} session={session} />
+      <DecisionSection
+        key={decision ? `${decision.adopted}-${decision.reason}` : ""}
+        decision={decision}
+        session={session}
+      />
 
       {/* Request (hidden in preview mode) */}
       {!previewState && (
@@ -908,14 +911,6 @@ function DecisionSection({
 }) {
   const [rejectionsOpen, setRejectionsOpen] = useState(false);
   const rejectionCount = decision?.rejections?.length ?? 0;
-
-  // Reset open state when decision changes
-  const decisionKey = decision ? `${decision.adopted}-${decision.reason}` : "";
-  const prevKeyRef = useRef(decisionKey);
-  if (decisionKey !== prevKeyRef.current) {
-    prevKeyRef.current = decisionKey;
-    setRejectionsOpen(false);
-  }
 
   return (
     <section className="section">
